@@ -6,6 +6,10 @@ import numpy as np
 import pandas as pd
 from attrs import define, field
 import copy
+import yaml
+
+from dataclasses import asdict
+from typing import Optional
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -89,6 +93,7 @@ class GreenHeartSimulationConfig:
     plant_design_scenario: int = field(default=1)
     output_level: int = field(default=8)
     grid_connection: Optional[bool] = field(default=None)
+    save_greenheart_output: Optional[bool] = field(default=False)
 
     # these are set in the __attrs_post_init__ method
     hopp_config: dict = field(init=False)
@@ -239,6 +244,17 @@ class GreenHeartSimulationOutput:
     ammonia_finance: Optional[AmmoniaFinanceModelOutputs] = field(default=None)
 
     platform_results: Optional[dict] = field(default=None)
+
+    def save_to_file(self, filename: str):
+        """Saves the attributes of the class to a YAML file."""
+        def serialize(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()  # Convert numpy arrays to lists
+            return obj
+
+        serialized_data = {key: serialize(value) for key, value in asdict(self).items()}
+        with open(filename, 'w') as file:
+            yaml.dump(serialized_data, file, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
 
 def setup_greenheart_simulation(config: GreenHeartSimulationConfig):

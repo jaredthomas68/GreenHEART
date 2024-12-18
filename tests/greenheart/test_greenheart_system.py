@@ -166,6 +166,28 @@ def test_simulation_wind_wave_solar(subtests):
     with subtests.test("lcoe"):
         assert lcoe == approx(0.1325651191367888, rel=rtol)
 
+def test_simulation_save_output_to_file(subtests):
+
+    config = GreenHeartSimulationConfig(
+        filename_hopp_config=filename_hopp_config_wind_wave_solar,
+        filename_greenheart_config=filename_greenheart_config,
+        filename_turbine_config=filename_turbine_config,
+        filename_orbit_config=filename_orbit_config,
+        filename_floris_config=filename_floris_config,
+        verbose=False,
+        show_plots=False,
+        save_plots=False,
+        use_profast=True,
+        post_processing=True,
+        incentive_option=1,
+        plant_design_scenario=11,
+        output_level=8,
+    )
+
+    output = run_simulation(config)
+
+    with subtests.test("save_ouput"):
+        output.save_to_file("tmp.yaml")
 
 def test_simulation_wind_wave_solar_battery(subtests):
 
