@@ -60,7 +60,6 @@ class AmmoniaCostModelConfig:
     plant_capacity_kgpy: float
     plant_capacity_factor: float
     feedstocks: Feedstocks
-    cost_year: int
 
 
 @define
@@ -684,7 +683,6 @@ def run_ammonia_full_model(greenheart_config: dict, save_plots=False, show_plots
     ammonia_cost_config = AmmoniaCostModelConfig(
         plant_capacity_factor=capacity_config.input_capacity_factor_estimate,
         plant_capacity_kgpy=ammonia_capacity.ammonia_plant_capacity_kgpy,
-        cost_year=greenheart_config["project_parameters"]["cost_year"],
         **ammonia_costs,
     )
     ammonia_cost_config.plant_capacity_kgpy = (
