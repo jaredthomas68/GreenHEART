@@ -111,6 +111,8 @@ class GreenHeartComponent(om.ExplicitComponent):
             ammonia_finance = greenheart_output.ammonia_finance
             pv_area = greenheart_output.hopp_results['hybrid_plant'].pv.footprint_area
             platform_area = greenheart_output.platform_results["toparea_m2"]
+            if config["save_greenheart_output"]:
+                greenheart_output.sav
 
         outputs["lcoe"] = lcoe
         outputs["lcoh"] = lcoh
