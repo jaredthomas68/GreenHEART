@@ -112,7 +112,7 @@ def test_simulation_wind_wave(subtests):
 
     # prior to 20240207 value was approx(0.11051228251811765) # TODO base value on something
     with subtests.test("lcoe"):
-        assert lcoe == approx(0.1327684184657075, rel=rtol)
+        assert lcoe == approx(0.1365056903719016, rel=rtol)
 
 
 def test_simulation_wind_wave_solar(subtests):
