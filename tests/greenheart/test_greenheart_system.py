@@ -53,7 +53,6 @@ def test_simulation_wind(subtests):
     lcoe, lcoh, _, hi = run_simulation(config)
 
     with subtests.test("lcoh"):
-<<<<<<< HEAD
         assert lcoh == approx(
             7.757618336598932
         )  # TODO base this test value on something
@@ -62,12 +61,6 @@ def test_simulation_wind(subtests):
         assert lcoe == approx(
             0.11711644354870403
         )  # TODO base this test value on something
-=======
-        assert lcoh == approx(7.509261597149882)  # TODO base this test value on something
-
-    with subtests.test("lcoe"):
-        assert lcoe == approx(0.11273307417999466)  # TODO base this test value on something
->>>>>>> develop
 
     with subtests.test("energy sources"):
         expected_annual_energy_hybrid = hi.system.annual_energies.wind
@@ -395,12 +388,7 @@ def test_simulation_wind_onshore_steel_ammonia_ss_h2storage(subtests):
 
     # TODO base this test value on something
     with subtests.test("steel_finance"):
-<<<<<<< HEAD
         lcos_expected = 1899.1776749016005
-=======
-        lcos_expected = 1812.985744428756
->>>>>>> develop
-
         assert steel_finance.sol.get("price") == approx(lcos_expected, rel=rtol)
 
     # TODO base this test value on something
