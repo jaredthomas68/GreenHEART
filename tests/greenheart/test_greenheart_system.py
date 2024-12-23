@@ -53,14 +53,10 @@ def test_simulation_wind(subtests):
     lcoe, lcoh, _, hi = run_simulation(config)
 
     with subtests.test("lcoh"):
-        assert lcoh == approx(
-            7.757618336598932
-        )  # TODO base this test value on something
+        assert lcoh == approx(7.757618336598932)  # TODO base this test value on something
 
     with subtests.test("lcoe"):
-        assert lcoe == approx(
-            0.11711644354870403
-        )  # TODO base this test value on something
+        assert lcoe == approx(0.11711644354870403)  # TODO base this test value on something
 
     with subtests.test("energy sources"):
         expected_annual_energy_hybrid = hi.system.annual_energies.wind
@@ -171,7 +167,7 @@ def test_simulation_wind_wave_solar_battery(subtests):
     # TODO base this test value on something. Currently just based on output at writing.
     with subtests.test("lcoe"):
         # TODO base this test value on something. Currently just based on output at writing.
-        assert results.lcoe == approx(0.13647532134776708, rel=rtol) 
+        assert results.lcoe == approx(0.13647532134776708, rel=rtol)
     with subtests.test("no conflict in om cost does not raise warning"):
         with warnings.catch_warnings():
             warnings.simplefilter("error")
