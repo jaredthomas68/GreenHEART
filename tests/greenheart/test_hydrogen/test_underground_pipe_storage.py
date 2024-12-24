@@ -48,7 +48,7 @@ def test_compressor_capex(pipe_storage):
     _pipe_storage_capex_per_kg, _installed_capex, compressor_capex = (
         pipe_storage.pipe_storage_capex()
     )
-    assert compressor_capex == pytest.approx(5907549.297)
+    assert compressor_capex == pytest.approx(6166803.4604083905)
 
 
 def test_capex_output_dict(pipe_storage):
@@ -63,4 +63,4 @@ def test_opex(pipe_storage):
         pipe_storage.pipe_storage_capex()
     )
     pipe_storage.pipe_storage_opex()
-    assert pipe_storage.output_dict["pipe_storage_opex"] == pytest.approx(16439748)
+    assert pipe_storage.output_dict["pipe_storage_opex"] == pytest.approx(16447526.057002176)

@@ -6,6 +6,7 @@
 - change units of `lcoe_real` in `HOPPComponent` from "MW*h" to "kW*h"
 - Adds `pre-commit`, `ruff`, and `isort` checks, and CI workflow to ensure these steps aren't
   skipped.
+- Change max hydrogen compressor motor power from 1600 kW to 16000 kW to match HDSAM
 
 ## v0.1.3 [1 November 2024]
 

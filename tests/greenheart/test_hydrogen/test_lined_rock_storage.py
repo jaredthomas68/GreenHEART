@@ -42,7 +42,7 @@ def test_compressor_capex(lined_rock_cavern_storage):
     _lined_rock_cavern_storage_capex_per_kg, _installed_capex, compressor_capex = (
         lined_rock_cavern_storage.lined_rock_cavern_capex()
     )
-    assert compressor_capex == pytest.approx(9435600.2555)
+    assert compressor_capex == pytest.approx(9856435.599720469)
 
 
 def test_capex_output_dict(lined_rock_cavern_storage):
@@ -60,5 +60,5 @@ def test_opex(lined_rock_cavern_storage):
     )
     lined_rock_cavern_storage.lined_rock_cavern_opex()
     assert lined_rock_cavern_storage.output_dict["lined_rock_cavern_storage_opex"] == pytest.approx(
-        2359700
+        2372325.506654421
     )

@@ -42,7 +42,7 @@ def test_compressor_capex(salt_cavern_storage):
     _salt_cavern_storage_capex_per_kg, _installed_capex, compressor_capex = (
         salt_cavern_storage.salt_cavern_capex()
     )
-    assert compressor_capex == pytest.approx(6516166.67163)
+    assert compressor_capex == pytest.approx(6803620.186276139)
 
 
 def test_capex_output_dict(salt_cavern_storage):
@@ -59,4 +59,6 @@ def test_opex(salt_cavern_storage):
         salt_cavern_storage.salt_cavern_capex()
     )
     salt_cavern_storage.salt_cavern_opex()
-    assert salt_cavern_storage.output_dict["salt_cavern_storage_opex"] == pytest.approx(1461664)
+    assert salt_cavern_storage.output_dict["salt_cavern_storage_opex"] == pytest.approx(
+        1470287.5144018596
+    )

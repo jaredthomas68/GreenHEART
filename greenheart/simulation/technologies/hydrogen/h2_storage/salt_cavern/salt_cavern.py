@@ -125,7 +125,7 @@ class SaltCavernStorage:
             )
             storage_compressor.compressor_power()
             motor_rating, power = storage_compressor.compressor_system_power()
-            if motor_rating > 1600:
+            if motor_rating > 16000:  # max from HDSAM
                 n_compressors += 1
                 storage_compressor = Compressor(
                     outlet_pressure, self.system_flow_rate, n_compressors=n_compressors
