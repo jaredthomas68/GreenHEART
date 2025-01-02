@@ -570,6 +570,7 @@ def run_profast_lcoe(
     capex_breakdown,
     opex_breakdown,
     hopp_results,
+    electrolyzer_physics_results,
     incentive_option,
     design_scenario,
     verbose=False,
@@ -604,7 +605,8 @@ def run_profast_lcoe(
     )
     pf.set_params(
         "capacity",
-        np.sum(hopp_results["combined_hybrid_power_production_hopp"]) / 365.0,
+        # np.sum(hopp_results["combined_hybrid_power_production_hopp"]) / 365.0,
+        np.sum(electrolyzer_physics_results["power_to_electrolyzer_kw"] / 365.0),
     )  # kWh/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     pf.set_params("analysis start year", greenheart_config["project_parameters"]["atb_year"] + 1)

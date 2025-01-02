@@ -907,6 +907,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
             capex_breakdown,
             opex_breakdown_annual,
             hopp_results,
+            electrolyzer_physics_results,
             config.incentive_option,
             config.design_scenario,
             verbose=config.verbose,
