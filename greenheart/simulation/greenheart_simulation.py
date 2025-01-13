@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from attrs import field, define
 from ProFAST import ProFAST
 from hopp.simulation import HoppInterface
+from hopp.simulation.technologies.sites import SiteInfo
 
 import greenheart.tools.eco.finance as he_fin
 import greenheart.tools.eco.hopp_mgmt as he_hopp
@@ -235,7 +236,9 @@ class GreenHeartSimulationOutput:
     platform_results: dict | None = field(default=None)
 
 
-def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
+def setup_greenheart_simulation(
+    config: GreenHeartSimulationConfig, hopp_site: SiteInfo | None = None
+):
     # run orbit for wind plant construction and other costs
     ## TODO get correct weather (wind, wave) inputs for ORBIT input (possibly via ERA5)
     if config.design_scenario["wind_location"] == "offshore":
@@ -502,13 +505,14 @@ def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
         wind_cost_results,
         show_plots=config.show_plots,
         save_plots=config.save_plots,
+        hopp_site=hopp_site,
     )
 
     return config, hi, wind_cost_results
 
 
-def run_simulation(config: GreenHeartSimulationConfig):
-    config, hi, wind_cost_results = setup_greenheart_simulation(config=config)
+def run_simulation(config: GreenHeartSimulationConfig, hopp_site: SiteInfo | None):
+    config, hi, wind_cost_results = setup_greenheart_simulation(config=config, hopp_site=hopp_site)
 
     # run HOPP model
     # hopp_results = he_hopp.run_hopp(
