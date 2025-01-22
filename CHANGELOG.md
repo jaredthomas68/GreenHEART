@@ -1,12 +1,17 @@
 # CHANGELOG
 
 ## Unreleased
-
-- add `CoolProp` to `pyproject.toml`
-- change units of `lcoe_real` in `HOPPComponent` from "MW*h" to "kW*h"
-- update steel cost year to 2022
-- update ammonia cost year to 2022
-- update tests to be compatible with HOPP 3.1.1 ProFAST integration
+- Adds `CoolProp` to `pyproject.toml`
+- Changes units of `lcoe_real` in `HOPPComponent` from "MW*h" to "kW*h"
+- Adds `pre-commit`, `ruff`, and `isort` checks, and CI workflow to ensure these steps aren't
+  skipped.
+- Updates steel cost year to 2022
+- Updates ammonia cost year to 2022
+- Requires HOPP 3.1.1 or higher
+- Updates tests to be compatible with HOPP 3.1.1 with ProFAST integration
+- Removes support for python 3.9
+- Add steel feedstock transport costs (lime, carbon, and iron ore pellets)
+- Allow individual debt rate, equity rate, and debt/equity ratio/split for each subsystem
 
 ## v0.1.3 [1 November 2024]
 
