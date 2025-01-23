@@ -15,6 +15,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import matplotlib.pyplot as plt
 from attrs import field, define, fields
 from ProFAST import ProFAST
+from hopp.utilities import load_yaml
 from hopp.simulation import HoppInterface
 
 import greenheart.tools.eco.finance as he_fin
@@ -39,12 +40,14 @@ from greenheart.simulation.technologies.ammonia.ammonia import (
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
-# Helper function to recursively convert non-serializable types to serializable ones
 def convert_to_serializable(value):
     """Convert unsupported types into serializable formats."""
     if isinstance(value, np.ndarray):
         # Convert NumPy array to a list
         return value.tolist()
+    elif isinstance(value, (np.generic, np.number)):
+        # Convert NumPy scalar to a Python scalar
+        return value.item()
     elif isinstance(value, pd.DataFrame):
         # Convert pandas DataFrame to list of dicts (records)
         return value.to_dict(orient="records")
@@ -59,23 +62,48 @@ def convert_to_serializable(value):
         return [convert_to_serializable(item) for item in value]
     elif hasattr(value, "__attrs_attrs__"):  # If it's an attrs-based class
         # Recursively convert attributes of an attrs-based class
-        for attr in dir(value):
-            # Avoid private attributes and methods
-            if (
-                attr.startswith("_")
-                or callable(getattr(value, attr))
-                or (getattr(value, attr) is None)
-            ):
-                continue
-            try:
-                v = getattr(value, attr)
-                v[attr] = convert_to_serializable(value)
-            except AttributeError:
-                pass
+        return {f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(value)}
 
-        return {f.name: convert_to_serializable(getattr(v, f.name)) for f in fields(v)}
+    # Return as-is if already serializable
+    return value
 
-    return value  # If it's already serializable, return it as is
+
+# def convert_to_serializable(value):
+#     """Convert unsupported types into serializable formats."""
+#     if isinstance(value, np.ndarray):
+#         # Convert NumPy array to a list
+#         return value.tolist()
+#     elif isinstance(value, pd.DataFrame):
+#         # Convert pandas DataFrame to list of dicts (records)
+#         return value.to_dict(orient="records")
+#     elif isinstance(value, pd.Series):
+#         # Convert pandas Series to a dictionary
+#         return value.to_dict()
+#     elif isinstance(value, dict):
+#         # Recursively convert dictionary values
+#         return {key: convert_to_serializable(val) for key, val in value.items()}
+#     elif isinstance(value, list):
+#         # Recursively convert list items
+#         return [convert_to_serializable(item) for item in value]
+#     elif hasattr(value, "__attrs_attrs__"):  # If it's an attrs-based class
+#         # Recursively convert attributes of an attrs-based class
+#         for attr in dir(value):
+#             # Avoid private attributes and methods
+#             if (
+#                 attr.startswith("_")
+#                 or callable(getattr(value, attr))
+#                 or (getattr(value, attr) is None)
+#             ):
+#                 continue
+#             try:
+#                 v = getattr(value, attr)
+#                 v[attr] = convert_to_serializable(value)
+#             except AttributeError:
+#                 pass
+
+#         return {f.name: convert_to_serializable(getattr(v, f.name)) for f in fields(v)}
+
+#     return value  # If it's already serializable, return it as is
 
 
 @define
@@ -265,6 +293,7 @@ class GreenHeartSimulationOutput:
     remaining_power_profile: np.ndarray
 
     # optional outputs
+    hopp_config: dict | None = field(default=None)
     h2_storage_max_fill_rate_kg_hr: dict | None = field(default=None)
     h2_storage_capacity_kg: dict | None = field(default=None)
     hydrogen_storage_state_of_charge_kg: dict | None = field(default=None)
@@ -280,13 +309,21 @@ class GreenHeartSimulationOutput:
     platform_results: dict | None = field(default=None)
 
     def save_to_file(self, filename: str):
-        """Saves the attributes of the class to a YAML file."""
+        """Saves select attributes of the class to a YAML file."""
 
         # Convert the object to a dictionary of serializable types
         serialized_data = {}
         for attr in dir(self):
             # Avoid private attributes and methods
             if attr.startswith("_") or callable(getattr(self, attr)):
+                continue
+            if attr == "greenheart_config":  # fails: max recursion depth
+                continue
+            if attr == "hopp_interface":  # fails: max recursion depth
+                continue
+            if attr.startswith("profast"):  # fails: cannot pickle `dict_keys` object
+                continue
+            if attr == "hopp_results":  # fails: max recursion depth
                 continue
             try:
                 value = getattr(self, attr)
@@ -299,32 +336,30 @@ class GreenHeartSimulationOutput:
                 serialized_data, file, default_flow_style=False, allow_unicode=True, sort_keys=False
             )
 
-    @classmethod
-    def load_from_file(cls, filename: str):
-        """Loads the class attributes from a YAML file."""
 
-        def convert(value):
-            """Recursively reconstruct complex types."""
-            if isinstance(value, list):
-                return [convert(v) for v in value]
-            elif isinstance(value, dict):
-                # Heuristic for pandas DataFrame
-                if all(isinstance(k, str) and isinstance(v, list) for k, v in value.items()):
-                    return pd.DataFrame(value)
-                elif all(
-                    isinstance(k, str) and isinstance(v, (int, float, str))
-                    for k, v in value.items()
-                ):
-                    return pd.Series(value)
-                else:
-                    return {k: convert(v) for k, v in value.items()}
-            return value
+def load_greenheart_simulation_output_from_file(cls, filename: str):
+    """Loads the class attributes from a YAML file."""
 
-        with Path.open(filename) as file:
-            data = yaml.safe_load(file)
+    def convert(value):
+        """Recursively reconstruct complex types."""
+        if isinstance(value, list):
+            return [convert(v) for v in value]
+        elif isinstance(value, dict):
+            # Heuristic for pandas DataFrame
+            if all(isinstance(k, str) and isinstance(v, list) for k, v in value.items()):
+                return pd.DataFrame(value)
+            elif all(
+                isinstance(k, str) and isinstance(v, (int, float, str)) for k, v in value.items()
+            ):
+                return pd.Series(value)
+            else:
+                return {k: convert(v) for k, v in value.items()}
+        return value
 
-        kwargs = {f.name: convert(data.get(f.name)) for f in fields(cls)}
-        return cls(**kwargs)
+    data = load_yaml(filename)
+
+    kwargs = {f.name: convert(data.get(f.name)) for f in fields(cls)}
+    return cls(**kwargs)
 
 
 def setup_greenheart_simulation(config: GreenHeartSimulationConfig):

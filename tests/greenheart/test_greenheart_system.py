@@ -1,10 +1,17 @@
+import inspect
 import warnings
 from pathlib import Path
 
-from pytest import warns, approx
+import pandas as pd
+from pytest import skip, warns, approx
 from hopp.utilities.keys import set_nrel_key_dot_env
 
-from greenheart.simulation.greenheart_simulation import GreenHeartSimulationConfig, run_simulation
+from greenheart.simulation.greenheart_simulation import (
+    GreenHeartSimulationConfig,
+    GreenHeartSimulationOutput,
+    run_simulation,
+    load_greenheart_simulation_output_from_file,
+)
 
 
 set_nrel_key_dot_env()
@@ -140,7 +147,7 @@ def test_simulation_wind_wave_solar(subtests):
         assert lcoe == approx(0.13255644222185253, rel=rtol)
 
 
-def test_simulation_save_output_to_file(subtests):
+def test_simulation_io(subtests):
     config = GreenHeartSimulationConfig(
         filename_hopp_config=filename_hopp_config_wind_wave_solar,
         filename_greenheart_config=filename_greenheart_config,
@@ -157,10 +164,44 @@ def test_simulation_save_output_to_file(subtests):
         output_level=8,
     )
 
-    output = run_simulation(config)
+    output_o = run_simulation(config)
 
-    with subtests.test("save_ouput"):
-        output.save_to_file("tmp.yaml")
+    with subtests.test("save_output"):
+        output_o.save_to_file("tmp.yaml")
+
+    with subtests.test("load_saved_output"):
+        output_i = load_greenheart_simulation_output_from_file(
+            GreenHeartSimulationOutput, "tmp.yaml"
+        )
+
+    members_o = inspect.getmembers(output_o, lambda a: not (inspect.isroutine(a)))
+    members_i = inspect.getmembers(output_i, lambda a: not (inspect.isroutine(a)))
+
+    for i, obj in enumerate(members_i):
+        with subtests.test(f"io equality {i}/{obj}"):
+            if i > 12:
+                skip(
+                    "we do not expect equality for these indexes because of excluded information"
+                    "in the yaml dump"
+                )
+
+            assert isinstance(members_o[i], type(obj))
+
+            if len(obj) > 1:
+                if isinstance(obj, pd.Series):
+                    assert obj.equals(members_i[i])
+                if isinstance(obj, dict):
+                    for key in obj.keys():
+                        if len(obj[key] > 1):
+                            for j, el in enumerate(obj[key]):
+                                assert el == members_i[i][key][j]
+                        else:
+                            assert obj[key] == members_i[i][key]
+                else:
+                    for j, el in enumerate(obj):
+                        assert el == members_o[i][j]
+            else:
+                assert obj == members_o[i]
 
 
 def test_simulation_wind_wave_solar_battery(subtests):
