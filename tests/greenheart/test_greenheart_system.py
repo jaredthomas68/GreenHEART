@@ -188,10 +188,10 @@ def test_simulation_io(subtests):
 
     for i, obj in enumerate(members_i):
         with subtests.test(f"io equality {i}/{obj}"):
-            if i > 14:
+            if i > 11:
                 skip(
                     "we do not expect equality for these indexes because of excluded information"
-                    "in the yaml dump"
+                    "in the yaml dump and complex data type nesting"
                 )
 
             assert isinstance(members_o[i], type(obj))

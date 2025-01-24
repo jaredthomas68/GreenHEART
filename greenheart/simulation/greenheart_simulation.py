@@ -41,83 +41,44 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def convert_to_serializable(value):
-    """Convert unsupported types into serializable formats."""
-    if isinstance(value, AmmoniaFinanceModelOutputs):
-        return None
-    if isinstance(value, SteelFinanceModelOutputs):
-        return None
-    elif isinstance(value, np.ndarray):
-        # Convert NumPy array to a list
-        # return value.tolist()
-        # Handle NumPy arrays of tuples
-        if value.dtype == object and all(isinstance(el, tuple) for el in value):
-            # Convert array of tuples to a list of lists
-            return [list(el) for el in value]
-        else:
-            # Convert regular NumPy arrays to a list
-            return value.tolist()
-    elif isinstance(value, (np.generic, np.number)):
-        # Convert NumPy scalar to a Python scalar
+    """
+    Recursively converts complex types to JSON/YAML-compatible formats.
+    Handles:
+    - `np.ndarray` -> list
+    - `tuple` -> list
+    - `np.generic` (e.g., `np.float64`, `np.int32`) -> native Python types
+    - `pandas.DataFrame` -> list of dicts, recursively processed
+    - `pandas.Series` -> list, recursively processed
+    - `attrs` objects -> dict of serialized attributes
+    - Handles deeply nested structures
+    """
+    if isinstance(value, np.ndarray):
+        return [convert_to_serializable(v) for v in value]  # Recursively convert arrays
+    elif isinstance(value, np.generic):  # Handles NumPy scalar types
         return value.item()
-    elif isinstance(value, pd.DataFrame):
-        # Convert pandas DataFrame to list of dicts (records)
-        return value.to_dict(orient="records")
-    elif isinstance(value, pd.Series):
-        # Convert pandas Series to a dictionary
-        return value.to_dict()
+    elif isinstance(value, tuple):
+        return [convert_to_serializable(v) for v in value]
     elif isinstance(value, dict):
-        # Recursively convert dictionary values
-        return {key: convert_to_serializable(val) for key, val in value.items()}
+        return {k: convert_to_serializable(v) for k, v in value.items()}
     elif isinstance(value, list):
-        # Recursively convert list items
-        return [convert_to_serializable(item) for item in value]
-    elif hasattr(value, "__attrs_attrs__"):  # If it's an attrs-based class
-        # Recursively convert attributes of an attrs-based class
-        # import pdb; pdb.set_trace()
+        return [convert_to_serializable(v) for v in value]
+    elif isinstance(value, pd.DataFrame):
+        # Recursively convert each cell in the DataFrame
+        return [
+            {k: convert_to_serializable(v) for k, v in row.items()}
+            for row in value.to_dict(orient="records")
+        ]
+    elif isinstance(value, pd.Series):
+        # Recursively convert each element in the Series
+        return [convert_to_serializable(v) for v in value]
+    elif hasattr(value, "__attrs_attrs__"):  # If it's an `attrs` class
         return {
             f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(type(value))
         }
-
-    # Return as-is if already serializable
-    return value
-
-
-# def convert_to_serializable(value):
-#     """Convert unsupported types into serializable formats."""
-#     if isinstance(value, np.ndarray):
-#         # Convert NumPy array to a list
-#         return value.tolist()
-#     elif isinstance(value, pd.DataFrame):
-#         # Convert pandas DataFrame to list of dicts (records)
-#         return value.to_dict(orient="records")
-#     elif isinstance(value, pd.Series):
-#         # Convert pandas Series to a dictionary
-#         return value.to_dict()
-#     elif isinstance(value, dict):
-#         # Recursively convert dictionary values
-#         return {key: convert_to_serializable(val) for key, val in value.items()}
-#     elif isinstance(value, list):
-#         # Recursively convert list items
-#         return [convert_to_serializable(item) for item in value]
-#     elif hasattr(value, "__attrs_attrs__"):  # If it's an attrs-based class
-#         # Recursively convert attributes of an attrs-based class
-#         for attr in dir(value):
-#             # Avoid private attributes and methods
-#             if (
-#                 attr.startswith("_")
-#                 or callable(getattr(value, attr))
-#                 or (getattr(value, attr) is None)
-#             ):
-#                 continue
-#             try:
-#                 v = getattr(value, attr)
-#                 v[attr] = convert_to_serializable(value)
-#             except AttributeError:
-#                 pass
-
-#         return {f.name: convert_to_serializable(getattr(v, f.name)) for f in fields(v)}
-
-#     return value  # If it's already serializable, return it as is
+    elif isinstance(value, (float, int, str, type(None))):
+        return value
+    else:
+        return str(value)  # Fall back to string representation for unsupported types
 
 
 @define
@@ -346,7 +307,7 @@ class GreenHeartSimulationOutput:
                 pass
 
         with Path.open(filename, "w") as file:
-            yaml.dump(
+            yaml.safe_dump(
                 serialized_data, file, default_flow_style=False, allow_unicode=True, sort_keys=False
             )
 
@@ -356,6 +317,8 @@ def load_greenheart_simulation_output_from_file(cls, filename: str):
 
     def convert(value):
         """Recursively reconstruct complex types."""
+        if isinstance(value, dict) and "__tuple__" in value:
+            return tuple(convert(v) for v in value["items"])  # Reconstruct tuple
         if isinstance(value, list):
             return [convert(v) for v in value]
         elif isinstance(value, dict):
