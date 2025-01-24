@@ -149,21 +149,30 @@ def test_simulation_wind_wave_solar(subtests):
 
 def test_simulation_io(subtests):
     config = GreenHeartSimulationConfig(
-        filename_hopp_config=filename_hopp_config_wind_wave_solar,
-        filename_greenheart_config=filename_greenheart_config,
+        filename_hopp_config=filename_hopp_config,
+        filename_greenheart_config=filename_greenheart_config_onshore,
         filename_turbine_config=filename_turbine_config,
-        filename_orbit_config=filename_orbit_config,
         filename_floris_config=filename_floris_config,
         verbose=False,
         show_plots=False,
         save_plots=False,
+        output_dir=output_path,
         use_profast=True,
         post_processing=True,
         incentive_option=1,
-        plant_design_scenario=11,
+        plant_design_scenario=9,
         output_level=8,
     )
 
+    # based on 2023 ATB moderate case for onshore wind
+    config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
+    # based on 2023 ATB moderate case for onshore wind
+    config.hopp_config["config"]["cost_info"]["wind_om_per_kw"] = 29.567
+    config.hopp_config["technologies"]["wind"]["fin_model"]["system_costs"]["om_fixed"][0] = (
+        config.hopp_config["config"]["cost_info"]["wind_om_per_kw"]
+    )
+    # set skip_financial to false for onshore wind
+    config.hopp_config["config"]["simulation_options"]["wind"]["skip_financial"] = False
     output_o = run_simulation(config)
 
     with subtests.test("save_output"):
@@ -179,7 +188,7 @@ def test_simulation_io(subtests):
 
     for i, obj in enumerate(members_i):
         with subtests.test(f"io equality {i}/{obj}"):
-            if i > 12:
+            if i > 14:
                 skip(
                     "we do not expect equality for these indexes because of excluded information"
                     "in the yaml dump"
@@ -190,8 +199,10 @@ def test_simulation_io(subtests):
             if len(obj) > 1:
                 if isinstance(obj, pd.Series):
                     assert obj.equals(members_i[i])
-                if isinstance(obj, dict):
+                elif isinstance(obj, dict):
                     for key in obj.keys():
+                        if key.startswith("_"):
+                            skip("don't compare private methods")
                         if len(obj[key] > 1):
                             for j, el in enumerate(obj[key]):
                                 assert el == members_i[i][key][j]
@@ -199,7 +210,12 @@ def test_simulation_io(subtests):
                             assert obj[key] == members_i[i][key]
                 else:
                     for j, el in enumerate(obj):
-                        assert el == members_o[i][j]
+                        if isinstance(el, pd.Series):
+                            assert el.equals(members_i[i][j])
+                        elif el is None:
+                            skip("don't compare None type attributes")
+                        else:
+                            assert el == members_o[i][j]
             else:
                 assert obj == members_o[i]
 

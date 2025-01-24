@@ -42,9 +42,20 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 def convert_to_serializable(value):
     """Convert unsupported types into serializable formats."""
-    if isinstance(value, np.ndarray):
+    if isinstance(value, AmmoniaFinanceModelOutputs):
+        return None
+    if isinstance(value, SteelFinanceModelOutputs):
+        return None
+    elif isinstance(value, np.ndarray):
         # Convert NumPy array to a list
-        return value.tolist()
+        # return value.tolist()
+        # Handle NumPy arrays of tuples
+        if value.dtype == object and all(isinstance(el, tuple) for el in value):
+            # Convert array of tuples to a list of lists
+            return [list(el) for el in value]
+        else:
+            # Convert regular NumPy arrays to a list
+            return value.tolist()
     elif isinstance(value, (np.generic, np.number)):
         # Convert NumPy scalar to a Python scalar
         return value.item()
@@ -62,7 +73,10 @@ def convert_to_serializable(value):
         return [convert_to_serializable(item) for item in value]
     elif hasattr(value, "__attrs_attrs__"):  # If it's an attrs-based class
         # Recursively convert attributes of an attrs-based class
-        return {f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(value)}
+        # import pdb; pdb.set_trace()
+        return {
+            f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(type(value))
+        }
 
     # Return as-is if already serializable
     return value
@@ -1193,7 +1207,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
     elif config.output_level == 7:
         return lcoe, lcoh, steel_finance, ammonia_finance
     elif config.output_level == 8:
-        return GreenHeartSimulationOutput(
+        output = GreenHeartSimulationOutput(
             config,
             hi,
             pf_lcoe,
@@ -1236,6 +1250,11 @@ def run_simulation(config: GreenHeartSimulationConfig):
             ),
             platform_results=platform_results,
         )
+
+        if config.save_greenheart_output:
+            output.save_to_file(Path(config.output_dir).resolve() / "data/greenheart_output.yaml")
+
+        return output
 
 
 def run_sweeps(
