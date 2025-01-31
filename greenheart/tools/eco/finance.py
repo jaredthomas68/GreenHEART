@@ -9,7 +9,7 @@ import numpy_financial as npf
 from attrs import field, define
 from ORBIT import ProjectManager
 from hopp.simulation import HoppInterface
-from greenheart.tools.eco.electrolysis import summarize_electrolysis_cost_and_performance
+from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import summarize_electrolysis_cost_and_performance
 import greenheart.tools.profast_tools as pf_tools
 
 @define
