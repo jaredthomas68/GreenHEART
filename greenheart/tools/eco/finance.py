@@ -9,7 +9,8 @@ import numpy_financial as npf
 from attrs import field, define
 from ORBIT import ProjectManager
 from hopp.simulation import HoppInterface
-
+from greenheart.tools.eco.electrolysis import summarize_electrolysis_cost_and_performance
+import greenheart.tools.profast_tools as pf_tools
 
 @define
 class WindCostConfig:
@@ -1237,6 +1238,17 @@ def run_profast_full_plant_model(
         output_dir = Path(output_dir).resolve()
     gen_inflation = greenheart_config["finance_parameters"]["profast_general_inflation"]
 
+    if "analysis_start_year" not in greenheart_config["finance_parameters"]:
+        analysis_start_year = greenheart_config["project_parameters"]["atb_year"] + 2
+    if "installation_period_months" not in greenheart_config["finance_parameters"]:
+        installation_period_months = wind_cost_results.installation_time
+    electrolyzer_cost_info = summarize_electrolysis_cost_and_performance(electrolyzer_physics_results,greenheart_config["electrolyzer"])
+    years_of_operation = pf_tools.create_years_of_operation(
+        greenheart_config["project_parameters"]["project_lifetime"],
+        analysis_start_year,
+        installation_period_months
+        )
+    utilization = dict(zip(years_of_operation,electrolyzer_cost_info["electrolyzer_utilization"]))
     # initialize dictionary of weights for averaging financial parameters
     finance_param_weights = {}
 
@@ -1263,18 +1275,17 @@ def run_profast_full_plant_model(
     )
     pf.set_params(
         "capacity",
-        electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"] / 365.0,
+        electrolyzer_cost_info["electrolyzer_capacity_kg_pr_day"],
     )  # kg/day
     pf.set_params("maintenance", {"value": 0, "escalation": gen_inflation})
     pf.set_params(
         "analysis start year",
-        greenheart_config["project_parameters"]["atb_year"]
-        + 2,  # Add financial analysis start year
+        analysis_start_year,
     )
     pf.set_params("operating life", greenheart_config["project_parameters"]["project_lifetime"])
     pf.set_params(
         "installation months",
-        wind_cost_results.installation_time,  # Add installation time to yaml default=0
+        installation_period_months,  # Add installation time to yaml default=0
     )
     pf.set_params(
         "installation cost",
@@ -1293,7 +1304,7 @@ def run_profast_full_plant_model(
             * (1 + gen_inflation) ** greenheart_config["project_parameters"]["project_lifetime"],
         )
     pf.set_params("demand rampup", 0)
-    pf.set_params("long term utilization", 1)  # TODO should use utilization
+    pf.set_params("long term utilization", utilization) 
     pf.set_params("credit card fees", 0)
     pf.set_params("sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"])
     pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
@@ -1433,25 +1444,13 @@ def run_profast_full_plant_model(
         ]
         # TODO assess if this makes sense (electrical export O&M included in wind O&M)
 
-    electrolyzer_refurbishment_schedule = np.zeros(
-        greenheart_config["project_parameters"]["project_lifetime"]
-    )
-    # refurb_period = round(
-    #     greenheart_config["electrolyzer"]["time_between_replacement"] / (24 * 365)
-    # )
-    refurb_period = round(
-        electrolyzer_physics_results["H2_Results"]["Time Until Replacement [hrs]"] / (24 * 365)
-    )
-    electrolyzer_refurbishment_schedule[
-        refurb_period : greenheart_config["project_parameters"]["project_lifetime"] : refurb_period
-    ] = greenheart_config["electrolyzer"]["replacement_cost_percent"]
 
     pf.add_capital_item(
         name="Electrolysis System",
         cost=capex_breakdown["electrolyzer"],
         depr_type=greenheart_config["finance_parameters"]["depreciation_method"],
         depr_period=greenheart_config["finance_parameters"]["depreciation_period_electrolyzer"],
-        refurb=list(electrolyzer_refurbishment_schedule),
+        refurb=electrolyzer_cost_info["refurb_cost_simple"],
     )
     finance_param_weights["electrolyzer"] = capex_breakdown["electrolyzer"]
     pf.add_fixed_cost(
@@ -1461,6 +1460,19 @@ def run_profast_full_plant_model(
         cost=opex_breakdown["electrolyzer"],
         escalation=gen_inflation,
     )
+    if isinstance(electrolyzer_cost_info["electrolyzer_var_om"],(list,np.ndarray)):
+        vopex_elec = dict(zip(years_of_operation,electrolyzer_cost_info["electrolyzer_var_om"]))
+    elif isinstance(electrolyzer_cost_info["electrolyzer_var_om"],float) and (electrolyzer_cost_info["electrolyzer_var_om"]>0):
+        vopex_elec = electrolyzer_cost_info["electrolyzer_var_om"] #$/kg-year
+    else:
+        vopex_elec = 0
+    pf.add_feedstock(
+        name = "Electrolyzer Variable O&M",
+        usage = 1.0,
+        unit = "$/kg",
+        cost = vopex_elec,
+        escalation = gen_inflation
+        )
 
     if design_scenario["electrolyzer_location"] == "turbine":
         pf.add_capital_item(
@@ -1546,11 +1558,7 @@ def run_profast_full_plant_model(
         galperkg = 3.785411784
         pf.add_feedstock(
             name="Water",
-            usage=sum(
-                electrolyzer_physics_results["H2_Results"]["Water Hourly Consumption [kg/hr]"]
-            )
-            * galperkg
-            / electrolyzer_physics_results["H2_Results"]["Life: Annual H2 production [kg/year]"],
+            usage=electrolyzer_physics_results["H2_Results"]["Rated BOL: Gal H2O per kg-H2"],
             unit="gal",
             cost="US Average",
             escalation=gen_inflation,
