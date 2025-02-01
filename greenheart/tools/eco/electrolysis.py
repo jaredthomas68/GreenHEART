@@ -15,15 +15,15 @@ from greenheart.simulation.technologies.hydrogen.electrolysis.H2_cost_model impo
     basic_H2_cost_model,
 )
 from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_BOP.PEM_BOP import pem_bop
+from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
+    calc_custom_electrolysis_capex_fom,
+)
 from greenheart.simulation.technologies.hydrogen.electrolysis.pem_mass_and_footprint import (
     mass as run_electrolyzer_mass,
     footprint as run_electrolyzer_footprint,
 )
 from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_Singlitico_model import (
     PEMCostsSingliticoModel,
-)
-from greenheart.simulation.technologies.hydrogen.electrolysis.PEM_costs_custom import (
-    calc_custom_electrolysis_capex_fom
 )
 
 
@@ -286,19 +286,16 @@ def run_electrolyzer_cost(
     electrolyzer_size_mw = greenheart_config["electrolyzer"]["rating"]
 
     if electrolyzer_cost_model == "custom":
-        (
-            electrolyzer_total_capital_cost,
-            electrolyzer_OM_cost 
-        ) = calc_custom_electrolysis_capex_fom(
-            electrolyzer_physics_results,
-            greenheart_config["electrolyzer"]
+        (electrolyzer_total_capital_cost, electrolyzer_OM_cost) = (
+            calc_custom_electrolysis_capex_fom(
+                electrolyzer_physics_results, greenheart_config["electrolyzer"]
+            )
         )
         electrolyzer_cost_results = {
-        "electrolyzer_total_capital_cost": electrolyzer_total_capital_cost,
-        "electrolyzer_OM_cost_annual": electrolyzer_OM_cost,
+            "electrolyzer_total_capital_cost": electrolyzer_total_capital_cost,
+            "electrolyzer_OM_cost_annual": electrolyzer_OM_cost,
         }
         return electrolyzer_cost_results
-
 
     H2_Results = electrolyzer_physics_results["H2_Results"]
     useful_life = greenheart_config["project_parameters"]["project_lifetime"]

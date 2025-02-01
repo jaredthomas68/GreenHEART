@@ -9,8 +9,12 @@ import numpy_financial as npf
 from attrs import field, define
 from ORBIT import ProjectManager
 from hopp.simulation import HoppInterface
-from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import summarize_electrolysis_cost_and_performance
+
 import greenheart.tools.profast_tools as pf_tools
+from greenheart.simulation.technologies.hydrogen.electrolysis.pem_cost_tools import (
+    summarize_electrolysis_cost_and_performance,
+)
+
 
 @define
 class WindCostConfig:
@@ -1242,13 +1246,15 @@ def run_profast_full_plant_model(
         analysis_start_year = greenheart_config["project_parameters"]["atb_year"] + 2
     if "installation_period_months" not in greenheart_config["finance_parameters"]:
         installation_period_months = wind_cost_results.installation_time
-    electrolyzer_cost_info = summarize_electrolysis_cost_and_performance(electrolyzer_physics_results,greenheart_config["electrolyzer"])
+    electrolyzer_cost_info = summarize_electrolysis_cost_and_performance(
+        electrolyzer_physics_results, greenheart_config["electrolyzer"]
+    )
     years_of_operation = pf_tools.create_years_of_operation(
         greenheart_config["project_parameters"]["project_lifetime"],
         analysis_start_year,
-        installation_period_months
-        )
-    utilization = dict(zip(years_of_operation,electrolyzer_cost_info["electrolyzer_utilization"]))
+        installation_period_months,
+    )
+    utilization = dict(zip(years_of_operation, electrolyzer_cost_info["electrolyzer_utilization"]))
     # initialize dictionary of weights for averaging financial parameters
     finance_param_weights = {}
 
@@ -1304,7 +1310,7 @@ def run_profast_full_plant_model(
             * (1 + gen_inflation) ** greenheart_config["project_parameters"]["project_lifetime"],
         )
     pf.set_params("demand rampup", 0)
-    pf.set_params("long term utilization", utilization) 
+    pf.set_params("long term utilization", utilization)
     pf.set_params("credit card fees", 0)
     pf.set_params("sales tax", greenheart_config["finance_parameters"]["sales_tax_rate"])
     pf.set_params("license and permit", {"value": 00, "escalation": gen_inflation})
@@ -1444,7 +1450,6 @@ def run_profast_full_plant_model(
         ]
         # TODO assess if this makes sense (electrical export O&M included in wind O&M)
 
-
     pf.add_capital_item(
         name="Electrolysis System",
         cost=capex_breakdown["electrolyzer"],
@@ -1460,19 +1465,21 @@ def run_profast_full_plant_model(
         cost=opex_breakdown["electrolyzer"],
         escalation=gen_inflation,
     )
-    if isinstance(electrolyzer_cost_info["electrolyzer_var_om"],(list,np.ndarray)):
-        vopex_elec = dict(zip(years_of_operation,electrolyzer_cost_info["electrolyzer_var_om"]))
-    elif isinstance(electrolyzer_cost_info["electrolyzer_var_om"],float) and (electrolyzer_cost_info["electrolyzer_var_om"]>0):
-        vopex_elec = electrolyzer_cost_info["electrolyzer_var_om"] #$/kg-year
+    if isinstance(electrolyzer_cost_info["electrolyzer_var_om"], (list, np.ndarray)):
+        vopex_elec = dict(zip(years_of_operation, electrolyzer_cost_info["electrolyzer_var_om"]))
+    elif isinstance(electrolyzer_cost_info["electrolyzer_var_om"], float) and (
+        electrolyzer_cost_info["electrolyzer_var_om"] > 0
+    ):
+        vopex_elec = electrolyzer_cost_info["electrolyzer_var_om"]  # $/kg-year
     else:
         vopex_elec = 0
     pf.add_feedstock(
-        name = "Electrolyzer Variable O&M",
-        usage = 1.0,
-        unit = "$/kg",
-        cost = vopex_elec,
-        escalation = gen_inflation
-        )
+        name="Electrolyzer Variable O&M",
+        usage=1.0,
+        unit="$/kg",
+        cost=vopex_elec,
+        escalation=gen_inflation,
+    )
 
     if design_scenario["electrolyzer_location"] == "turbine":
         pf.add_capital_item(
@@ -1555,7 +1562,6 @@ def run_profast_full_plant_model(
 
     # ---------------------- Add feedstocks, note the various cost options-------------------
     if design_scenario["electrolyzer_location"] == "onshore":
-        galperkg = 3.785411784
         pf.add_feedstock(
             name="Water",
             usage=electrolyzer_physics_results["H2_Results"]["Rated BOL: Gal H2O per kg-H2"],
