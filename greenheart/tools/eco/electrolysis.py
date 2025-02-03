@@ -108,8 +108,8 @@ def run_electrolyzer_physics(
     footprint_m2 = run_electrolyzer_footprint(electrolyzer_size_mw)
 
     # store results for return
+    H2_Results.update({"system capacity [kW]": electrolyzer_size_mw * 1e3})
     electrolyzer_physics_results = {
-        "system capacity [kW]": electrolyzer_size_mw * 1e3,
         "H2_Results": H2_Results,
         "capacity_factor": H2_Results["Life: Capacity Factor"],
         "equipment_mass_kg": mass_kg,
