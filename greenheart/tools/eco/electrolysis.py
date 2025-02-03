@@ -109,6 +109,7 @@ def run_electrolyzer_physics(
 
     # store results for return
     electrolyzer_physics_results = {
+        "system capacity [kW]": electrolyzer_size_mw * 1e3,
         "H2_Results": H2_Results,
         "capacity_factor": H2_Results["Life: Capacity Factor"],
         "equipment_mass_kg": mass_kg,
