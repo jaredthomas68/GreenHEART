@@ -210,17 +210,17 @@ class SteelCostModelOutputs(SteelCosts):
 @define
 class SteelCapacityModelConfig:
     """
-        Configuration inputs for the steel capacity sizing model, including plant capacity and
-        feedstock details.
-    ƒ
-        Attributes:
-            hydrogen_amount_kgpy Optional (float): The amount of hydrogen available in kilograms
-                per year to make steel.
-            desired_steel_mtpy Optional (float): The amount of desired steel production in
-                metric tonnes per year.
-            input_capacity_factor_estimate (float): The estimated steel plant capacity factor.
-            feedstocks (Feedstocks): An instance of the `Feedstocks` class detailing the
-                costs and consumption rates of resources used in production.
+    Configuration inputs for the steel capacity sizing model, including plant capacity and
+    feedstock details.
+
+    Attributes:
+        hydrogen_amount_kgpy Optional (float): The amount of hydrogen available in kilograms
+            per year to make steel.
+        desired_steel_mtpy Optional (float): The amount of desired steel production in
+            metric tonnes per year.
+        input_capacity_factor_estimate (float): The estimated steel plant capacity factor.
+        feedstocks (Feedstocks): An instance of the `Feedstocks` class detailing the
+            costs and consumption rates of resources used in production.
     """
 
     input_capacity_factor_estimate: float
