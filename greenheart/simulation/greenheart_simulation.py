@@ -5,11 +5,17 @@ import copy
 import warnings
 from pathlib import Path
 
+import yaml
 import numpy as np
 import pandas as pd
+
+
+pd.options.mode.chained_assignment = None  # default='warn'
+
 import matplotlib.pyplot as plt
-from attrs import field, define
+from attrs import field, define, fields
 from ProFAST import ProFAST
+from hopp.utilities import load_yaml
 from hopp.simulation import HoppInterface
 
 import greenheart.tools.eco.finance as he_fin
@@ -32,6 +38,49 @@ from greenheart.simulation.technologies.ammonia.ammonia import (
 
 
 pd.options.mode.chained_assignment = None  # default='warn'
+
+
+def convert_to_serializable(value):
+    """
+    Recursively converts complex types to JSON/YAML-compatible formats.
+    Handles:
+    - `np.ndarray` -> list
+    - `tuple` -> list
+    - `np.generic` (e.g., `np.float64`, `np.int32`) -> native Python types
+    - `pandas.DataFrame` -> list of dicts, recursively processed
+    - `pandas.Series` -> list, recursively processed
+    - `attrs` objects -> dict of serialized attributes
+    - Handles deeply nested structures
+
+    Note: this function was originally created by ChatGPT and edited manually to work as desired
+    """
+    if isinstance(value, np.ndarray):
+        return [convert_to_serializable(v) for v in value]  # Recursively convert arrays
+    elif isinstance(value, np.generic):  # Handles NumPy scalar types
+        return value.item()
+    elif isinstance(value, tuple):
+        return [convert_to_serializable(v) for v in value]
+    elif isinstance(value, dict):
+        return {k: convert_to_serializable(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [convert_to_serializable(v) for v in value]
+    elif isinstance(value, pd.DataFrame):
+        # Recursively convert each cell in the DataFrame
+        return [
+            {k: convert_to_serializable(v) for k, v in row.items()}
+            for row in value.to_dict(orient="records")
+        ]
+    elif isinstance(value, pd.Series):
+        # Recursively convert each element in the Series
+        return [convert_to_serializable(v) for v in value]
+    elif hasattr(value, "__attrs_attrs__"):  # If it's an `attrs` class
+        return {
+            f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(type(value))
+        }
+    elif isinstance(value, (float, int, str, type(None))):
+        return value
+    else:
+        return str(value)  # Fall back to string representation for unsupported types
 
 
 @define
@@ -87,6 +136,7 @@ class GreenHeartSimulationConfig:
     plant_design_scenario: int = field(default=1)
     output_level: int = field(default=8)
     grid_connection: bool | None = field(default=None)
+    save_greenheart_output: bool | None = field(default=False)
 
     # these are set in the __attrs_post_init__ method
     hopp_config: dict = field(init=False)
@@ -220,6 +270,7 @@ class GreenHeartSimulationOutput:
     remaining_power_profile: np.ndarray
 
     # optional outputs
+    hopp_config: dict | None = field(default=None)
     h2_storage_max_fill_rate_kg_hr: dict | None = field(default=None)
     h2_storage_capacity_kg: dict | None = field(default=None)
     hydrogen_storage_state_of_charge_kg: dict | None = field(default=None)
@@ -233,6 +284,61 @@ class GreenHeartSimulationOutput:
     ammonia_finance: AmmoniaFinanceModelOutputs | None = field(default=None)
 
     platform_results: dict | None = field(default=None)
+
+    def save_to_file(self, filename: str):
+        """Saves select attributes of the class to a YAML file."""
+
+        # Convert the object to a dictionary of serializable types
+        serialized_data = {}
+        for attr in dir(self):
+            # Avoid private attributes and methods
+            if attr.startswith("_") or callable(getattr(self, attr)):
+                continue
+            if attr == "greenheart_config":  # fails: max recursion depth
+                continue
+            if attr == "hopp_interface":  # fails: max recursion depth
+                continue
+            if attr.startswith("profast"):  # fails: cannot pickle `dict_keys` object
+                continue
+            if attr == "hopp_results":  # fails: max recursion depth
+                continue
+            try:
+                value = getattr(self, attr)
+                serialized_data[attr] = convert_to_serializable(value)
+            except AttributeError:
+                pass
+
+        with Path.open(filename, "w") as file:
+            yaml.safe_dump(
+                serialized_data, file, default_flow_style=False, allow_unicode=True, sort_keys=False
+            )
+
+
+def load_greenheart_simulation_output_from_file(cls, filename: str):
+    """Loads the class attributes from a YAML file."""
+
+    def convert(value):
+        """Recursively reconstruct complex types."""
+        if isinstance(value, dict) and "__tuple__" in value:
+            return tuple(convert(v) for v in value["items"])  # Reconstruct tuple
+        if isinstance(value, list):
+            return [convert(v) for v in value]
+        elif isinstance(value, dict):
+            # Heuristic for pandas DataFrame
+            if all(isinstance(k, str) and isinstance(v, list) for k, v in value.items()):
+                return pd.DataFrame(value)
+            elif all(
+                isinstance(k, str) and isinstance(v, (int, float, str)) for k, v in value.items()
+            ):
+                return pd.Series(value)
+            else:
+                return {k: convert(v) for k, v in value.items()}
+        return value
+
+    data = load_yaml(filename)
+
+    kwargs = {f.name: convert(data.get(f.name)) for f in fields(cls)}
+    return cls(**kwargs)
 
 
 def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
@@ -1068,7 +1174,7 @@ def run_simulation(config: GreenHeartSimulationConfig):
     elif config.output_level == 7:
         return lcoe, lcoh, steel_finance, ammonia_finance
     elif config.output_level == 8:
-        return GreenHeartSimulationOutput(
+        output = GreenHeartSimulationOutput(
             config,
             hi,
             pf_lcoe,
@@ -1111,6 +1217,11 @@ def run_simulation(config: GreenHeartSimulationConfig):
             ),
             platform_results=platform_results,
         )
+
+        if config.save_greenheart_output:
+            output.save_to_file(Path(config.output_dir).resolve() / "data/greenheart_output.yaml")
+
+        return output
 
 
 def run_sweeps(
