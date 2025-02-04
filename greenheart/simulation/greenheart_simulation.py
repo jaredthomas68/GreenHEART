@@ -51,6 +51,8 @@ def convert_to_serializable(value):
     - `pandas.Series` -> list, recursively processed
     - `attrs` objects -> dict of serialized attributes
     - Handles deeply nested structures
+
+    Note: this function was originally created by ChatGPT and edited manually to work as desired
     """
     if isinstance(value, np.ndarray):
         return [convert_to_serializable(v) for v in value]  # Recursively convert arrays

@@ -12,6 +12,7 @@
 - Removes support for python 3.9
 - Add steel feedstock transport costs (lime, carbon, and iron ore pellets)
 - Allow individual debt rate, equity rate, and debt/equity ratio/split for each subsystem
+- Allow users to save the GreenHEARTOutput class as a yaml file and read that yaml to an instance of the output class
 
 ## v0.1.3 [1 November 2024]
 
