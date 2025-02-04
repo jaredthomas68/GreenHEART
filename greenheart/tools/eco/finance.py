@@ -607,7 +607,6 @@ def calc_financial_parameter_weighted_average_by_capex(
 
         # calcuated weighted average parameter value
         parameter_value = np.average(values, weights=weights)
-
     return parameter_value
 
 
@@ -1118,7 +1117,7 @@ def run_profast_grid_only(
     energy_purchase = (
         365 * 24 * greenheart_config["electrolyzer"]["rating"] * 1e3
         + sum(total_accessory_power_renewable_kw)
-        + total_accessory_power_grid_kw
+        + sum(total_accessory_power_grid_kw)
     )
 
     pf.add_fixed_cost(
@@ -1575,7 +1574,7 @@ def run_profast_full_plant_model(
 
     if (
         greenheart_config["project_parameters"]["grid_connection"]
-        or total_accessory_power_grid_kw > 0
+        or sum(total_accessory_power_grid_kw) > 0
     ):
         energy_purchase = sum(total_accessory_power_grid_kw)  # * 365 * 24
 
