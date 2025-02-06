@@ -164,6 +164,8 @@ def test_simulation_io(subtests):
         output_level=8,
     )
 
+    temp_file_path = Path("tmp.yaml")
+
     # based on 2023 ATB moderate case for onshore wind
     config.hopp_config["config"]["cost_info"]["wind_installed_cost_mw"] = 1434000.0
     # based on 2023 ATB moderate case for onshore wind
@@ -180,8 +182,11 @@ def test_simulation_io(subtests):
 
     with subtests.test("load_saved_output"):
         output_i = load_greenheart_simulation_output_from_file(
-            GreenHeartSimulationOutput, "tmp.yaml"
+            GreenHeartSimulationOutput, temp_file_path
         )
+
+    if temp_file_path.exists():
+        temp_file_path.unlink()
 
     members_o = inspect.getmembers(output_o, lambda a: not (inspect.isroutine(a)))
     members_i = inspect.getmembers(output_i, lambda a: not (inspect.isroutine(a)))
