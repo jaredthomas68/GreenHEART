@@ -8,7 +8,6 @@ from hopp.utilities.keys import set_nrel_key_dot_env
 
 from greenheart.simulation.greenheart_simulation import (
     GreenHeartSimulationConfig,
-    GreenHeartSimulationOutput,
     run_simulation,
     load_greenheart_simulation_output_from_file,
 )
@@ -181,9 +180,7 @@ def test_simulation_io(subtests):
         output_o.save_to_file("tmp.yaml")
 
     with subtests.test("load_saved_output"):
-        output_i = load_greenheart_simulation_output_from_file(
-            GreenHeartSimulationOutput, temp_file_path
-        )
+        output_i = load_greenheart_simulation_output_from_file(temp_file_path)
 
     if temp_file_path.exists():
         temp_file_path.unlink()

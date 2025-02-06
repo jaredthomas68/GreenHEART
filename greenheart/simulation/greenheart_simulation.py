@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import copy
 import warnings
+from typing import Any
 from pathlib import Path
 
 import yaml
@@ -39,21 +40,41 @@ from greenheart.simulation.technologies.ammonia.ammonia import (
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+# """
+# Recursively converts complex types to JSON/YAML-compatible formats.
+# Handles:
+# - `np.ndarray` -> list
+# - `tuple` -> list
+# - `np.generic` (e.g., `np.float64`, `np.int32`) -> native Python types
+# - `pandas.DataFrame` -> list of dicts, recursively processed
+# - `pandas.Series` -> list, recursively processed
+# - `attrs` objects -> dict of serialized attributes
+# - Handles deeply nested structures
 
-def convert_to_serializable(value):
-    """
-    Recursively converts complex types to JSON/YAML-compatible formats.
+# Note: this function was originally created by ChatGPT and edited manually to work as desired
+# """
+
+
+def convert_to_serializable(value: Any) -> float | int | str | type(None) | list | dict:
+    """Recursively converts complex types to JSON/YAML-compatible formats.
+
     Handles:
     - `np.ndarray` -> list
     - `tuple` -> list
-    - `np.generic` (e.g., `np.float64`, `np.int32`) -> native Python types
+    - `np.generic` (e.g., `np.float64`, `np.int32`) -> corresponding native Python types
     - `pandas.DataFrame` -> list of dicts, recursively processed
     - `pandas.Series` -> list, recursively processed
     - `attrs` objects -> dict of serialized attributes
     - Handles deeply nested structures
 
     Note: this function was originally created by ChatGPT and edited manually to work as desired
+
+    Args:
+        value (Any): value to converted for output to yaml
+    Returns:
+        Union[float, int, str, type(None), list, dict]: input value in yaml-compatible format
     """
+
     if isinstance(value, np.ndarray):
         return [convert_to_serializable(v) for v in value]  # Recursively convert arrays
     elif isinstance(value, np.generic):  # Handles NumPy scalar types
@@ -314,8 +335,19 @@ class GreenHeartSimulationOutput:
             )
 
 
-def load_greenheart_simulation_output_from_file(cls, filename: str):
-    """Loads the class attributes from a YAML file."""
+def load_greenheart_simulation_output_from_file(filename: str) -> GreenHeartSimulationOutput:
+    """Creates an incomplete instance of GreenHeartSimulationOutput from a previously save `.yaml`
+    file. The result is missing the following: `greenheart_config`, `hopp_interface`,
+    `profast_lcoe`, `profast_lcoh`, `profast_lcoh_grid_only`, and `hopp_results`. Note that data
+    types will not exactly match the instance of GreenHeartSimulationOutput that was saved due to
+    required data type conversions for yaml output and easy loading.
+
+    Args:
+        filename (str): Path to the file where an instance of GreenHeartSimulationOutput was saved
+
+    Returns:
+        GreenHeartSimulationOutput: An incomplete instance of GreenHeartSimulationOutput.
+    """
 
     def convert(value):
         """Recursively reconstruct complex types."""
@@ -337,8 +369,8 @@ def load_greenheart_simulation_output_from_file(cls, filename: str):
 
     data = load_yaml(filename)
 
-    kwargs = {f.name: convert(data.get(f.name)) for f in fields(cls)}
-    return cls(**kwargs)
+    kwargs = {f.name: convert(data.get(f.name)) for f in fields(GreenHeartSimulationOutput)}
+    return GreenHeartSimulationOutput(**kwargs)
 
 
 def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
