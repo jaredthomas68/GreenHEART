@@ -75,13 +75,17 @@ def convert_to_serializable(value: Any) -> float | int | str | type(None) | list
         Union[float, int, str, type(None), list, dict]: input value in yaml-compatible format
     """
 
-    if isinstance(value, (float, int, str, type(None))):
-        return value
-    elif isinstance(value, np.generic):  # Handles NumPy scalar types
+    if isinstance(value, np.generic):
+        # Handles NumPy scalar types, converting to python native types
         return value.item()
-    elif isinstance(value, np.ndarray, tuple, list, pd.Series):
-        return [convert_to_serializable(v) for v in value]  # Recursively convert array-like types
+    elif isinstance(value, (float, int, str, type(None))):
+        # simple native python types do not need conversion
+        return value
+    elif isinstance(value, (np.ndarray, tuple, list, pd.Series)):
+        # Recursively convert array-like types
+        return [convert_to_serializable(v) for v in value]
     elif isinstance(value, dict):
+        # recursively convert dictionary values
         return {k: convert_to_serializable(v) for k, v in value.items()}
     elif isinstance(value, pd.DataFrame):
         # Recursively convert each cell in the DataFrame
@@ -89,12 +93,14 @@ def convert_to_serializable(value: Any) -> float | int | str | type(None) | list
             {k: convert_to_serializable(v) for k, v in row.items()}
             for row in value.to_dict(orient="records")
         ]
-    elif hasattr(value, "__attrs_attrs__"):  # If it's an `attrs` class
+    elif hasattr(value, "__attrs_attrs__"):
+        # If it's an `attrs` class, recursively convert attributes
         return {
             f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(type(value))
         }
     else:
-        return str(value)  # Fall back to string representation for unsupported types
+        # Fall back to string representation for unsupported types
+        return str(value)
 
 
 @define
