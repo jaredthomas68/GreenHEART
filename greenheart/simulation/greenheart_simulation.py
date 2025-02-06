@@ -75,31 +75,24 @@ def convert_to_serializable(value: Any) -> float | int | str | type(None) | list
         Union[float, int, str, type(None), list, dict]: input value in yaml-compatible format
     """
 
-    if isinstance(value, np.ndarray):
-        return [convert_to_serializable(v) for v in value]  # Recursively convert arrays
+    if isinstance(value, (float, int, str, type(None))):
+        return value
     elif isinstance(value, np.generic):  # Handles NumPy scalar types
         return value.item()
-    elif isinstance(value, tuple):
-        return [convert_to_serializable(v) for v in value]
+    elif isinstance(value, np.ndarray, tuple, list, pd.Series):
+        return [convert_to_serializable(v) for v in value]  # Recursively convert array-like types
     elif isinstance(value, dict):
         return {k: convert_to_serializable(v) for k, v in value.items()}
-    elif isinstance(value, list):
-        return [convert_to_serializable(v) for v in value]
     elif isinstance(value, pd.DataFrame):
         # Recursively convert each cell in the DataFrame
         return [
             {k: convert_to_serializable(v) for k, v in row.items()}
             for row in value.to_dict(orient="records")
         ]
-    elif isinstance(value, pd.Series):
-        # Recursively convert each element in the Series
-        return [convert_to_serializable(v) for v in value]
     elif hasattr(value, "__attrs_attrs__"):  # If it's an `attrs` class
         return {
             f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(type(value))
         }
-    elif isinstance(value, (float, int, str, type(None))):
-        return value
     else:
         return str(value)  # Fall back to string representation for unsupported types
 
@@ -309,19 +302,20 @@ class GreenHeartSimulationOutput:
     def save_to_file(self, filename: str):
         """Saves select attributes of the class to a YAML file."""
 
+        ignore = [
+            "greenheart_config",  # fails: max recursion depth
+            "hopp_interface",  # fails: max recursion depth
+            "hopp_results",  # fails: max recursion depth
+            "profast_lcoe",  # fails: cannot pickle `dict_keys` object
+            "profast_lcoh",  # fails: cannot pickle `dict_keys` object
+            "profast_lcoh_grid_only",  # fails: cannot pickle `dict_keys` object
+        ]
+
         # Convert the object to a dictionary of serializable types
         serialized_data = {}
         for attr in dir(self):
             # Avoid private attributes and methods
-            if attr.startswith("_") or callable(getattr(self, attr)):
-                continue
-            if attr == "greenheart_config":  # fails: max recursion depth
-                continue
-            if attr == "hopp_interface":  # fails: max recursion depth
-                continue
-            if attr.startswith("profast"):  # fails: cannot pickle `dict_keys` object
-                continue
-            if attr == "hopp_results":  # fails: max recursion depth
+            if attr.startswith("_") or callable(getattr(self, attr)) or (attr in ignore):
                 continue
             try:
                 value = getattr(self, attr)
