@@ -323,9 +323,7 @@ class GreenHeartSimulationOutput:
         serialized_data = {}
         for attr in dir(self):
             # Avoid private attributes and methods
-            if attr.startswith("_"):
-                continue
-            if callable(getattr(self, attr)):
+            if attr.startswith("_") or callable(getattr(self, attr)):
                 continue
             if attr in ignore:
                 continue

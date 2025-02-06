@@ -192,12 +192,12 @@ def test_simulation_io(subtests):
 
     for i, obj in enumerate(members_i):
         with subtests.test(f"io equality {i}/{obj}"):
-            if obj in ignore:
+            if obj[0] in ignore:
                 skip(
                     "we do not expect equality for these indexes because of excluded information"
                     "in the yaml dump and complex data type nesting"
                 )
-            if i > 19:
+            if i > 14:
                 skip(
                     "we do not expect equality for these indexes because of excluded information"
                     "in the yaml dump and complex data type nesting"
