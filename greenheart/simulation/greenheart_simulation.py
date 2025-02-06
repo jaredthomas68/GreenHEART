@@ -338,43 +338,45 @@ class GreenHeartSimulationOutput:
                 serialized_data, file, default_flow_style=False, allow_unicode=True, sort_keys=False
             )
 
+    @classmethod
+    def load_from_file(cls, filename: str) -> GreenHeartSimulationOutput:
+        """Creates an incomplete instance of GreenHeartSimulationOutput from a previously saved
+        `.yaml` file. The result is missing the following: `greenheart_config`, `hopp_interface`,
+        `profast_lcoe`, `profast_lcoh`, `profast_lcoh_grid_only`, and `hopp_results`. Note that
+        data types will not exactly match the instance of GreenHeartSimulationOutput that was
+        saved due to equired data type conversions for yaml output and easy loading.
 
-def load_greenheart_simulation_output_from_file(filename: str) -> GreenHeartSimulationOutput:
-    """Creates an incomplete instance of GreenHeartSimulationOutput from a previously save `.yaml`
-    file. The result is missing the following: `greenheart_config`, `hopp_interface`,
-    `profast_lcoe`, `profast_lcoh`, `profast_lcoh_grid_only`, and `hopp_results`. Note that data
-    types will not exactly match the instance of GreenHeartSimulationOutput that was saved due to
-    required data type conversions for yaml output and easy loading.
+        Args:
+            filename (str): Path to the file where an instance of GreenHeartSimulationOutput
+            was saved
 
-    Args:
-        filename (str): Path to the file where an instance of GreenHeartSimulationOutput was saved
+        Returns:
+            (GreenHeartSimulationOutput): An incomplete instance of GreenHeartSimulationOutput.
+        """
 
-    Returns:
-        GreenHeartSimulationOutput: An incomplete instance of GreenHeartSimulationOutput.
-    """
+        def convert(value):
+            """Recursively reconstruct complex types."""
+            if isinstance(value, dict) and "__tuple__" in value:
+                return tuple(convert(v) for v in value["items"])  # Reconstruct tuple
+            if isinstance(value, list):
+                return [convert(v) for v in value]
+            elif isinstance(value, dict):
+                # Heuristic for pandas DataFrame
+                if all(isinstance(k, str) and isinstance(v, list) for k, v in value.items()):
+                    return pd.DataFrame(value)
+                elif all(
+                    isinstance(k, str) and isinstance(v, (int, float, str))
+                    for k, v in value.items()
+                ):
+                    return pd.Series(value)
+                else:
+                    return {k: convert(v) for k, v in value.items()}
+            return value
 
-    def convert(value):
-        """Recursively reconstruct complex types."""
-        if isinstance(value, dict) and "__tuple__" in value:
-            return tuple(convert(v) for v in value["items"])  # Reconstruct tuple
-        if isinstance(value, list):
-            return [convert(v) for v in value]
-        elif isinstance(value, dict):
-            # Heuristic for pandas DataFrame
-            if all(isinstance(k, str) and isinstance(v, list) for k, v in value.items()):
-                return pd.DataFrame(value)
-            elif all(
-                isinstance(k, str) and isinstance(v, (int, float, str)) for k, v in value.items()
-            ):
-                return pd.Series(value)
-            else:
-                return {k: convert(v) for k, v in value.items()}
-        return value
+        data = load_yaml(filename)
 
-    data = load_yaml(filename)
-
-    kwargs = {f.name: convert(data.get(f.name)) for f in fields(GreenHeartSimulationOutput)}
-    return GreenHeartSimulationOutput(**kwargs)
+        kwargs = {f.name: convert(data.get(f.name)) for f in fields(cls)}
+        return cls(**kwargs)
 
 
 def setup_greenheart_simulation(config: GreenHeartSimulationConfig):
