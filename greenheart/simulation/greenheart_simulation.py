@@ -78,9 +78,6 @@ def convert_to_serializable(value: Any) -> float | int | str | type(None) | list
     if isinstance(value, np.generic):
         # Handles NumPy scalar types, converting to python native types
         return value.item()
-    elif isinstance(value, (float, int, str, type(None))):
-        # simple native python types do not need conversion
-        return value
     elif isinstance(value, (np.ndarray, tuple, list, pd.Series)):
         # Recursively convert array-like types
         return [convert_to_serializable(v) for v in value]
@@ -98,6 +95,9 @@ def convert_to_serializable(value: Any) -> float | int | str | type(None) | list
         return {
             f.name: convert_to_serializable(getattr(value, f.name)) for f in fields(type(value))
         }
+    elif isinstance(value, (float, int, str, type(None))):
+        # simple native python types do not need conversion
+        return value
     else:
         # Fall back to string representation for unsupported types
         return str(value)
@@ -308,6 +308,8 @@ class GreenHeartSimulationOutput:
     def save_to_file(self, filename: str):
         """Saves select attributes of the class to a YAML file."""
 
+        filepath = Path(filename)
+
         ignore = [
             "greenheart_config",  # fails: max recursion depth
             "hopp_interface",  # fails: max recursion depth
@@ -321,7 +323,11 @@ class GreenHeartSimulationOutput:
         serialized_data = {}
         for attr in dir(self):
             # Avoid private attributes and methods
-            if attr.startswith("_") or callable(getattr(self, attr)) or (attr in ignore):
+            if attr.startswith("_"):
+                continue
+            if callable(getattr(self, attr)):
+                continue
+            if attr in ignore:
                 continue
             try:
                 value = getattr(self, attr)
@@ -329,7 +335,7 @@ class GreenHeartSimulationOutput:
             except AttributeError:
                 pass
 
-        with Path.open(filename, "w") as file:
+        with filepath.open("w") as file:
             yaml.safe_dump(
                 serialized_data, file, default_flow_style=False, allow_unicode=True, sort_keys=False
             )

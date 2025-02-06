@@ -188,9 +188,16 @@ def test_simulation_io(subtests):
     members_o = inspect.getmembers(output_o, lambda a: not (inspect.isroutine(a)))
     members_i = inspect.getmembers(output_i, lambda a: not (inspect.isroutine(a)))
 
+    ignore = ["ammonia_finance", "steel_finance"]
+
     for i, obj in enumerate(members_i):
         with subtests.test(f"io equality {i}/{obj}"):
-            if i > 11:
+            if obj in ignore:
+                skip(
+                    "we do not expect equality for these indexes because of excluded information"
+                    "in the yaml dump and complex data type nesting"
+                )
+            if i > 19:
                 skip(
                     "we do not expect equality for these indexes because of excluded information"
                     "in the yaml dump and complex data type nesting"
@@ -216,6 +223,8 @@ def test_simulation_io(subtests):
                             assert el.equals(members_i[i][j])
                         elif el is None:
                             skip("don't compare None type attributes")
+                        elif type(el) is str and el.startswith("_"):
+                            skip("don't compare private methods")
                         else:
                             assert el == members_o[i][j]
             else:
