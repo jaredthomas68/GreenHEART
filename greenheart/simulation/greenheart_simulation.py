@@ -38,23 +38,6 @@ from greenheart.simulation.technologies.ammonia.ammonia import (
 )
 
 
-pd.options.mode.chained_assignment = None  # default='warn'
-
-# """
-# Recursively converts complex types to JSON/YAML-compatible formats.
-# Handles:
-# - `np.ndarray` -> list
-# - `tuple` -> list
-# - `np.generic` (e.g., `np.float64`, `np.int32`) -> native Python types
-# - `pandas.DataFrame` -> list of dicts, recursively processed
-# - `pandas.Series` -> list, recursively processed
-# - `attrs` objects -> dict of serialized attributes
-# - Handles deeply nested structures
-
-# Note: this function was originally created by ChatGPT and edited manually to work as desired
-# """
-
-
 def convert_to_serializable(value: Any) -> float | int | str | type(None) | list | dict:
     """Recursively converts complex types to JSON/YAML-compatible formats.
 
