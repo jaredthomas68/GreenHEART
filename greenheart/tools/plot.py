@@ -3,7 +3,6 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from hopp.tools.dispatch.plot_tools import plot_generation_profile
 
 
 def get_hour_from_datetime(dt_start: dt.datetime, dt_end: dt.datetime) -> tuple[int, int]:
@@ -35,7 +34,7 @@ def plot_hydrogen_flows(
     save_path: str = "./output/figures/production/hydrogen-flow.pdf",
     show_fig: bool = True,
     save_fig: bool = True,
-):
+) -> None:
     """Generates a plot of the hydrogen dispatch from the greenheart output.
 
     Args:
@@ -94,10 +93,20 @@ def plot_hydrogen_flows(
 
 
 def plot_energy_flows(
-    energy_flow_data_path,
-    start_date_time=dt.datetime(2024, 1, 5, 14),
-    end_date_time=dt.datetime(2024, 1, 10, 14),
-):
+    energy_flow_data_path: str,
+    start_date_time: dt.datetime = dt.datetime(2024, 1, 5, 14),
+    end_date_time: dt.datetime = dt.datetime(2024, 1, 10, 14),
+) -> None:
+    """Generates a plot of electricity and hydrogen dispatch for the specified period
+
+    Args:
+        energy_flow_data_path (str): path to energy flow output file
+        start_date_time (dt.datetime, optional): start time for plot.
+            Defaults to dt.datetime(2024, 1, 5, 14).
+        end_date_time (dt.datetime, optional): end time for plot.
+            Defaults to dt.datetime(2024, 1, 10, 14).
+    """
+
     # set start and end dates
     hour_start, hour_end = get_hour_from_datetime(start_date_time, end_date_time)
 
@@ -204,10 +213,19 @@ def plot_energy_flows(
 
 
 def plot_energy(
-    energy_flow_data_path,
-    start_date_time=dt.datetime(2024, 1, 2, 1),
-    end_date_time=dt.datetime(2024, 12, 3, 14),
-):
+    energy_flow_data_path: str,
+    start_date_time: dt.datetime = dt.datetime(2024, 1, 2, 1),
+    end_date_time: dt.datetime = dt.datetime(2024, 12, 3, 14),
+) -> None:
+    """Plots electricity generation and dispatch for the specified period
+
+    Args:
+        energy_flow_data_path (str): path to the energy flow output from GreenHEART
+        start_date_time (dt.datetime, optional): start time for plot.
+            Defaults to dt.datetime(2024, 1, 2, 1).
+        end_date_time (dt.datetime, optional): end time for plot.
+            Defaults to dt.datetime(2024, 12, 3, 14).
+    """
     # set start and end dates
     hour_start, hour_end = get_hour_from_datetime(start_date_time, end_date_time)
 
@@ -339,10 +357,4 @@ if __name__ == "__main__":
     energy_flows_data_path = "./output/data/production/energy_flows.csv"
     # plot_energy_flows(energy_flow_data_path=energy_flows_data_path)
     # plot_energy(energy_flow_data_path=energy_flows_data_path)
-    plot_generation_profile(
-        energy_flows_data_path,
-        dt.datetime(2024, 7, 1, 0),
-        dt.datetime(2024, 7, 10, 23),
-        plot_filename="output/figures/production/electricity_flow.pdf",
-    )
     plot_hydrogen_flows(energy_flows_data_path)
