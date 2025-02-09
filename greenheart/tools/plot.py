@@ -96,6 +96,9 @@ def plot_energy_flows(
     energy_flow_data_path: str,
     start_date_time: dt.datetime = dt.datetime(2024, 1, 5, 14),
     end_date_time: dt.datetime = dt.datetime(2024, 1, 10, 14),
+    save_path: str = "./output/figures/production/hydrogen-flow.pdf",
+    show_fig: bool = True,
+    save_fig: bool = True,
 ) -> None:
     """Generates a plot of electricity and hydrogen dispatch for the specified period
 
@@ -209,7 +212,11 @@ def plot_energy_flows(
 
     # fig.add_axes((0, 0, 1, 0.5))
     plt.tight_layout()
-    plt.show()
+
+    if save_fig:
+        plt.savefig(save_path, transparent=True)
+    if show_fig:
+        plt.show()
 
 
 def plot_energy(
