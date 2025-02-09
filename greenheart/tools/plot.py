@@ -59,7 +59,7 @@ def plot_hydrogen_flows(
     df_data = df_data.iloc[hour_start:hour_end]
 
     # set up plots
-    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8, 4))
+    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 3))
 
     # plot hydrogen production
     df_h_out = df_data[["h2 production hourly [kg]"]] * 1e-3  # convert to t
@@ -73,13 +73,13 @@ def plot_hydrogen_flows(
 
     ax[0].plot(df_h_soc * 1e-3)
     ax[0].set(
-        ylabel="H$_2$ Storage SOC (kt)", xlabel="Hour", ylim=[0, round(np.max(df_h_soc * 1e-3), 0)]
+        ylabel="H$_2$ storage SOC (kt)", xlabel="Hour", ylim=[0, np.ceil(np.max(df_h_soc * 1e-3))]
     )
 
     # plot net h2 available
     net_flow = np.array(df_h_out).flatten() - np.array(df_h_soc_change)
-    ax[1].plot(df_h_out, "--", label="Electrolyzer output", alpha=0.5)
-    ax[1].plot(net_flow, label="Net Dispatch")
+    ax[1].plot(df_h_out, "-", label="Electrolyzer output", alpha=0.5)
+    ax[1].plot(net_flow, label="Net dispatch")
     ax[1].axhline(h2_demand, linestyle=":", label="Demand", color="k")
     ax[1].set(ylabel="Hydrogen (t)", xlabel="Hour", ylim=[0, np.max(df_h_out) * 1.4])
     ax[1].legend(frameon=False, ncol=3, loc=2)
