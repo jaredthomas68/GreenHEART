@@ -419,7 +419,7 @@ def visualize_plant(
     onshorex = 50
     onshorey = 50
 
-    wind_buffer = np.min(turbine_x) - (onshorey + 2 * rotor_diameter + electrolyzer_side)
+    wind_buffer = np.min(turbine_x) - (onshorey + 3 * rotor_diameter + electrolyzer_side)
     if "pv" in hopp_config["technologies"].keys():
         wind_buffer -= np.sqrt(hopp_results["hybrid_plant"].pv.footprint_area)
     if "battery" in hopp_config["technologies"].keys():
@@ -647,14 +647,17 @@ def visualize_plant(
         or design_scenario["transportation"] == "hvdc+pipeline"
     ):
         ax[0, 0].plot(
-            [onshorex + onshore_substation_x_side_length, 1000],
-            [48, 48],
+            [onshorex + onshore_substation_x_side_length, 10000],
+            [
+                onshorey - onshore_substation_y_side_length,
+                onshorey - onshore_substation_y_side_length,
+            ],
             "--",
             color=cable_color,
             label="HVDC Cable",
         )
         ax[0, 1].plot(
-            [-5000, substation_x],
+            [-50000, substation_x],
             [substation_y - 100, substation_y - 100],
             "--",
             color=cable_color,
@@ -1129,17 +1132,19 @@ def visualize_plant(
 
             ax[ax_index_plant].add_patch(solar_patch)
 
-            solar_patch = patches.Rectangle(
-                (solarx, solary),
-                solar_side_x,
-                solar_side_y,
-                color=solar_color,
-                fill=None,
-                label="Solar Array",
-                hatch=solar_hatch,
-            )
+            if design_scenario["wind_location"] != "offshore":
+                solar_patch = patches.Rectangle(
+                    (solarx, solary),
+                    solar_side_x,
+                    solar_side_y,
+                    color=solar_color,
+                    fill=None,
+                    label="Solar Array",
+                    hatch=solar_hatch,
+                )
 
-            ax[ax_index_detail].add_patch(solar_patch)
+                ax[ax_index_detail].add_patch(solar_patch)
+
     else:
         solar_side_x = 0.0
         solar_side_y = 0.0
@@ -1206,51 +1211,67 @@ def visualize_plant(
             xlim=[
                 round(np.min(onshorex - 100), ndigits=roundto),
                 round(
-                    np.max(onshorex + onshore_substation_x_side_length + electrolyzer_side + 200),
+                    np.max(
+                        [
+                            onshorex,
+                            onshore_substation_x_side_length,
+                            electrolyzer_side,
+                            solar_side_x,
+                        ]
+                    )
+                    * 1.8,
                     ndigits=roundto,
                 ),
             ],
             ylim=[
                 round(np.min(onshorey - 100), ndigits=roundto),
                 round(
-                    np.max(onshorey + battery_side_y + electrolyzer_side + solar_side_y + 100),
+                    np.max(onshorey + battery_side_y + electrolyzer_side + solar_side_y + 100)
+                    * 1.7,
                     ndigits=roundto,
                 ),
             ],
         )
         ax[ax_index_plant].set(aspect="equal")
-    else:
+
         roundto = -3
-        ax[ax_index_plant].set(
+        point_range_x = np.max(allpoints) - np.min(allpoints)
+        point_range_y = np.max(turbine_y) - np.min(turbine_y)
+        ax[ax_index_wind_plant].set(
             xlim=[
-                round(np.min(allpoints - 6000), ndigits=roundto),
-                round(np.max(allpoints + 6000), ndigits=roundto),
+                round(np.min(allpoints) - 0.5 * point_range_x, ndigits=roundto),
+                round(np.max(allpoints) + 0.5 * point_range_x, ndigits=roundto),
             ],
             ylim=[
-                round(np.min(onshorey - 1000), ndigits=roundto),
-                round(np.max(turbine_y + 4000), ndigits=roundto),
+                round(np.min(turbine_y) - 0.3 * point_range_y, ndigits=roundto),
+                round(np.max(turbine_y) + 0.3 * point_range_y, ndigits=roundto),
             ],
         )
-        ax[ax_index_plant].autoscale()
-        ax[ax_index_plant].set(aspect="equal")
-        ax[ax_index_plant].xaxis.set_major_locator(ticker.MultipleLocator(2000))
-        ax[ax_index_plant].yaxis.set_major_locator(ticker.MultipleLocator(1000))
+        # ax[ax_index_wind_plant].autoscale()
+        ax[ax_index_wind_plant].set(aspect="equal")
+        # ax[ax_index_wind_plant].xaxis.set_major_locator(ticker.\
+        #   MultipleLocator(np.round(point_range_x*0.5, decimals=-3)))
+        # ax[ax_index_wind_plant].yaxis.set_major_locator(ticker.\
+        #   MultipleLocator(np.round(point_range_y*0.5, device_spacing=-3)))
 
-    roundto = -3
-    ax[ax_index_wind_plant].set(
-        xlim=[
-            round(np.min(allpoints - 6000), ndigits=roundto),
-            round(np.max(allpoints + 6000), ndigits=roundto),
-        ],
-        ylim=[
-            round((np.min([np.min(turbine_y), onshorey]) - 1000), ndigits=roundto),
-            round(np.max(turbine_y + 4000), ndigits=roundto),
-        ],
-    )
-    # ax[ax_index_wind_plant].autoscale()
-    ax[ax_index_wind_plant].set(aspect="equal")
-    ax[ax_index_wind_plant].xaxis.set_major_locator(ticker.MultipleLocator(5000))
-    ax[ax_index_wind_plant].yaxis.set_major_locator(ticker.MultipleLocator(1000))
+    else:
+        roundto = -3
+        point_range_x = np.max(allpoints) - np.min(allpoints)
+        point_range_y = np.max(turbine_y) - onshorey
+        ax[ax_index_plant].set(
+            xlim=[
+                round(np.min(allpoints) - 0.7 * point_range_x, ndigits=roundto),
+                round(np.max(allpoints + 0.7 * point_range_x), ndigits=roundto),
+            ],
+            ylim=[
+                round(np.min(onshorey) - 0.2 * point_range_y, ndigits=roundto),
+                round(np.max(turbine_y) + 1.0 * point_range_y, ndigits=roundto),
+            ],
+        )
+        # ax[ax_index_plant].autoscale()
+        ax[ax_index_plant].set(aspect="equal")
+        # ax[ax_index_plant].xaxis.set_major_locator(ticker.MultipleLocator(2000))
+        # ax[ax_index_plant].yaxis.set_major_locator(ticker.MultipleLocator(1000))
 
     if design_scenario["wind_location"] == "offshore":
         roundto = -2
@@ -1269,11 +1290,20 @@ def visualize_plant(
         roundto = -2
 
         if "pv" in hopp_config["technologies"].keys():
-            xmax = round(np.max([onshorex + 510, solarx + solar_side_x + 100]), ndigits=roundto)
-            ymax = round(solary + solar_side_y + 100, ndigits=roundto)
+            xmax = round(
+                np.max([onshorex, electrolyzer_side, battery_side_x, solar_side_x]) * 1.1,
+                ndigits=roundto,
+            )
+            ymax = round(
+                onshorey + (solar_side_y + electrolyzer_side + battery_side_y) * 1.15,
+                ndigits=roundto,
+            )
         else:
-            xmax = round(np.max([onshorex + 510, 100]), ndigits=roundto)
-            ymax = round(100, ndigits=roundto)
+            xmax = round(np.max([onshorex]) * 1.1, ndigits=roundto)
+            ymax = round(
+                onshorey + (electrolyzer_side + battery_side_y + solar_side_y) * 1.1,
+                ndigits=roundto,
+            )
         ax[ax_index_detail].set(
             xlim=[
                 round(onshorex - 10, ndigits=roundto),
