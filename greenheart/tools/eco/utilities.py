@@ -458,7 +458,7 @@ def visualize_plant(
         i = 0
         for x, y in zip(turbine_x, turbine_y):
             if i == 0:
-                rlabel = "Wind Turbine Rotor"
+                rlabel = "Wind turbine rotor"
                 i += 1
             else:
                 rlabel = None
@@ -481,7 +481,7 @@ def visualize_plant(
 
     if ax_index_turbine_detail:
         # turbine_patch11_rotor = patches.Circle((turbine_x[0], turbine_y[0]), radius=rotor_radius, color=turbine_rotor_color, fill=False, label=None, zorder=10)  # noqa: E501
-        tlabel = "Wind Turbine Tower"
+        tlabel = "Wind turbine tower"
         turbine_patch11_tower = patches.Circle(
             (turbine_x[0], turbine_y[0]),
             radius=tower_base_radius,
@@ -501,7 +501,7 @@ def visualize_plant(
         i = 0
         for point_string in pipe_array_points:
             if i == 0:
-                label = "Array Pipes"
+                label = "Array pipes"
                 i += 1
             else:
                 label = None
@@ -541,7 +541,7 @@ def visualize_plant(
         i = 0
         for point_string in cable_array_points:
             if i == 0:
-                label = "Array Cables"
+                label = "Array cables"
                 i += 1
             else:
                 label = None
@@ -621,7 +621,7 @@ def visualize_plant(
             equipment_platform_side_length,
             color=equipment_platform_color,
             fill=True,
-            label="Equipment Platform",
+            label="Equipment platform",
             zorder=1,
         )
         equipment_platform_patch10 = patches.Rectangle(
@@ -633,7 +633,7 @@ def visualize_plant(
             equipment_platform_side_length,
             color=equipment_platform_color,
             fill=True,
-            label="Equipment Platform",
+            label="Equipment platform",
             zorder=1,
         )
         ax[0, 1].add_patch(equipment_platform_patch01)
@@ -654,14 +654,14 @@ def visualize_plant(
             ],
             "--",
             color=cable_color,
-            label="HVDC Cable",
+            label="HVDC cable",
         )
         ax[0, 1].plot(
             [-50000, substation_x],
             [substation_y - 100, substation_y - 100],
             "--",
             color=cable_color,
-            label="HVDC Cable",
+            label="HVDC cable",
             zorder=0,
         )
         ax[1, 0].plot(
@@ -669,7 +669,7 @@ def visualize_plant(
             [substation_y - 2, substation_y - 2],
             "--",
             color=cable_color,
-            label="HVDC Cable",
+            label="HVDC cable",
             zorder=0,
         )
 
@@ -698,7 +698,7 @@ def visualize_plant(
     if design_scenario["transportation"] == "colocated":
         # add hydrogen pipeline to end use
         linetype = "-."
-        label = "Pipeline to Storage/End-Use"
+        label = "Pipeline to storage/end-use"
         linewidth = 1.0
 
         ax[ax_index_plant].plot(
@@ -729,7 +729,7 @@ def visualize_plant(
         )
     ):
         linetype = "-."
-        label = "Transport Pipeline"
+        label = "Transport pipeline"
         linewidth = 1.0
 
         ax[ax_index_plant].plot(
@@ -781,7 +781,7 @@ def visualize_plant(
                 compressor_side,
                 color=compressor_color,
                 fill=None,
-                label="Transport Compressor*",
+                label="Transport compressor*",
                 hatch="+++",
                 zorder=20,
             )
@@ -793,7 +793,7 @@ def visualize_plant(
             compressor_side,
             color=compressor_color,
             fill=None,
-            label="Transport Compressor*",
+            label="Transport compressor*",
             hatch="+++",
             zorder=20,
         )
@@ -892,10 +892,10 @@ def visualize_plant(
         i = 0
         for x, y in zip(turbine_x, turbine_y):
             if i == 0:
-                elable = "Electrolyzer"
+                elabel = "Electrolyzer"
                 dlabel = "Desalinator"
             else:
-                elable = None
+                elabel = None
                 dlabel = None
             electrolyzer_patch01 = patches.Rectangle(
                 (x, y + tower_base_radius),
@@ -904,7 +904,7 @@ def visualize_plant(
                 color=electrolyzer_color,
                 fill=None,
                 zorder=20,
-                label=elable,
+                label=elabel,
                 hatch=electrolyzer_hatch,
             )
             desal_patch01 = patches.Rectangle(
@@ -931,7 +931,7 @@ def visualize_plant(
             h2_storage_side,
             color=h2_storage_color,
             fill=None,
-            label="H$_2$ Storage",
+            label="H$_2$ storage",
             hatch=h2_storage_hatch,
         )
         ax[ax_index_plant].add_patch(h2_storage_patch)
@@ -944,7 +944,7 @@ def visualize_plant(
                 h2_storage_side,
                 color=h2_storage_color,
                 fill=None,
-                label="H$_2$ Storage",
+                label="H$_2$ storage",
                 hatch=h2_storage_hatch,
             )
             ax[ax_index_detail].add_patch(h2_storage_patch)
@@ -965,7 +965,7 @@ def visualize_plant(
             s_side_y,
             color=h2_storage_color,
             fill=None,
-            label="H$_2$ Storage",
+            label="H$_2$ storage",
             hatch=h2_storage_hatch,
         )
         ax[ax_index_detail].add_patch(h2_storage_patch)
@@ -978,7 +978,7 @@ def visualize_plant(
                 radius=tower_base_diameter / 2,
                 color=h2_storage_color,
                 fill=None,
-                label="H$_2$ Storage",
+                label="H$_2$ storage",
                 hatch=h2_storage_hatch,
             )
             ax[ax_index_turbine_detail].add_patch(h2_storage_patch)
@@ -986,9 +986,9 @@ def visualize_plant(
             i = 0
             for x, y in zip(turbine_x, turbine_y):
                 if i == 0:
-                    slable = "H$_2$ Storage"
+                    slabel = "H$_2$ storage"
                 else:
-                    slable = None
+                    slabel = None
                 h2_storage_patch = patches.Circle(
                     (x, y),
                     radius=tower_base_diameter / 2,
@@ -1009,16 +1009,16 @@ def visualize_plant(
                 height=h2_storage_side,
                 color=h2_storage_color,
                 fill=None,
-                label="H$_2$ Storage",
+                label="H$_2$ storage",
                 hatch=h2_storage_hatch,
             )
             ax[ax_index_turbine_detail].add_patch(h2_storage_patch)
             component_areas["h2_storage_area_m2"] = h2_storage_area
             for i in range(zip(turbine_x, turbine_y)):
                 if i == 0:
-                    slable = "H$_2$ Storage"
+                    slabel = "H$_2$ storage"
                 else:
-                    slable = None
+                    slabel = None
                 h2_storage_patch = patches.Rectangle(
                     (
                         turbine_x[i] - h2_storage_side - desal_equipment_side,
@@ -1028,7 +1028,7 @@ def visualize_plant(
                     height=h2_storage_side,
                     color=h2_storage_color,
                     fill=None,
-                    label=slable,
+                    label=slabel,
                     hatch=h2_storage_hatch,
                 )
                 ax[ax_index_wind_plant].add_patch(h2_storage_patch)
@@ -1050,7 +1050,7 @@ def visualize_plant(
                 battery_side_y,
                 color=battery_color,
                 fill=None,
-                label="Battery Array",
+                label="Battery array",
                 hatch=battery_hatch,
             )
             ax[ax_index_plant].add_patch(battery_patch)
@@ -1062,7 +1062,7 @@ def visualize_plant(
                     battery_side_y,
                     color=battery_color,
                     fill=None,
-                    label="Battery Array",
+                    label="Battery array",
                     hatch=battery_hatch,
                 )
                 ax[ax_index_detail].add_patch(battery_patch)
@@ -1080,7 +1080,7 @@ def visualize_plant(
                 battery_side_y,
                 color=battery_color,
                 fill=None,
-                label="Battery Array",
+                label="Battery array",
                 hatch=battery_hatch,
             )
             ax[ax_index_detail].add_patch(battery_patch)
@@ -1105,7 +1105,7 @@ def visualize_plant(
                 solar_side_y,
                 color=solar_color,
                 fill=None,
-                label="Solar Array",
+                label="Solar array",
                 hatch=solar_hatch,
             )
             ax[ax_index_detail].add_patch(solar_patch)
@@ -1126,7 +1126,7 @@ def visualize_plant(
                 solar_side_y,
                 color=solar_color,
                 fill=None,
-                label="Solar Array",
+                label="Solar array",
                 hatch=solar_hatch,
             )
 
@@ -1139,7 +1139,7 @@ def visualize_plant(
                     solar_side_y,
                     color=solar_color,
                     fill=None,
-                    label="Solar Array",
+                    label="Solar array",
                     hatch=solar_hatch,
                 )
 
@@ -1175,7 +1175,7 @@ def visualize_plant(
             wave_side_y,
             color=wave_color,
             fill=None,
-            label="Wave Array",
+            label="Wave array",
             hatch=wave_hatch,
             zorder=1,
         )
