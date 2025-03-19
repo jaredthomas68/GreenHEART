@@ -909,7 +909,7 @@ def run_profast_lcoe(
             show_plot=show_plots,
         )
 
-    return lcoe, pf
+    return lcoe, pf, sol
 
 
 def run_profast_grid_only(
@@ -1214,7 +1214,7 @@ def run_profast_grid_only(
             savepaths[2] / f"lcoh_grid_only_{design_scenario['id']}",
             show_plot=show_plots,
         )
-    return lcoh, pf
+    return lcoh, pf, sol
 
 
 def run_profast_full_plant_model(
@@ -1788,4 +1788,4 @@ def run_profast_full_plant_model(
             show_plot=show_plots,
         )
 
-    return lcoh, pf
+    return lcoh, pf, sol
