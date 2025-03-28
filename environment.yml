@@ -1,4 +1,4 @@
-name: greenheart014
+name: greenheart
 channels:
   - conda-forge
   - defaults
