@@ -7,7 +7,7 @@
 turbine_type: 'osw_18MW'
 rated_windspeed: 10.66 # m/s [2]
 rotor_diameter: 265.36 # m scaled from 15MW
-turbine_rating: 18.21708293 # MW
+turbine_rating: 18.0 # MW
 hub_height: 161.0 # m scaled from 15MW
 TSR: 9.0 # [2]
 operation_model: cosine-loss # [3]
