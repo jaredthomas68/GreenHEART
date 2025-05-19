@@ -26,7 +26,42 @@ class HOPPComponent(om.ExplicitComponent):
         self.options.declare("plant_config", types=dict)
 
     def setup(self):
+        self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
+        if self.hopp_config["technologies"]["pv"]["system_capacity_kw"]:
+            pv_capacity_kw_init = self.hopp_config["technologies"]["pv"]["system_capacity_kw"]
+        else:
+            pv_capacity_kw_init = 0.0
+        self.add_input("pv_capacity_kw", val=pv_capacity_kw_init, units="kW")
+
+        if self.hopp_config["technologies"]["battery"]["system_capacity_kw"]:
+            battery_capacity_kw_init = self.hopp_config["technologies"]["battery"][
+                "system_capacity_kw"
+            ]
+        else:
+            battery_capacity_kw_init = 0.0
+        self.add_input("battery_capacity_kw", val=battery_capacity_kw_init, units="kW")
+
+        if self.hopp_config["technologies"]["battery"]["system_capacity_kwh"]:
+            battery_capacity_kwh_init = self.hopp_config["technologies"]["battery"][
+                "system_capacity_kwh"
+            ]
+        else:
+            battery_capacity_kwh_init = 0.0
+        self.add_input("battery_capacity_kwh", val=battery_capacity_kwh_init, units="kW*h")
+
+        if self.hopp_config["technologies"]["wind"]["turbine_rating_kw"]:
+            wind_turbine_rating_kw_init = self.hopp_config["technologies"]["wind"][
+                "turbine_rating_kw"
+            ]
+        else:
+            wind_turbine_rating_kw_init = 0.0
+        self.add_input("wind_turbine_rating_kw", val=wind_turbine_rating_kw_init, units="kW")
+
         # Outputs
+        self.add_output("lcoe", val=0.0, units="USD/(kW*h)")
+        self.add_output("percent_load_missed", units="percent", val=0.0)
+        self.add_output("curtailment_percent", units="percent", val=0.0)
+        self.add_output("aep", units="(kW*h)", val=0.0)
         self.add_output("electricity", val=np.zeros(n_timesteps), units="kW", desc="Power output")
         self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
