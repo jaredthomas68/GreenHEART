@@ -27,6 +27,15 @@ class HOPPComponent(om.ExplicitComponent):
 
     def setup(self):
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
+
+        if self.hopp_config["technologies"]["wind"]["turbine_rating_kw"]:
+            wind_turbine_rating_kw_init = self.hopp_config["technologies"]["wind"][
+                "turbine_rating_kw"
+            ]
+        else:
+            wind_turbine_rating_kw_init = 0.0
+        self.add_input("wind_turbine_rating_kw", val=wind_turbine_rating_kw_init, units="kW")
+
         if self.hopp_config["technologies"]["pv"]["system_capacity_kw"]:
             pv_capacity_kw_init = self.hopp_config["technologies"]["pv"]["system_capacity_kw"]
         else:
@@ -48,14 +57,6 @@ class HOPPComponent(om.ExplicitComponent):
         else:
             battery_capacity_kwh_init = 0.0
         self.add_input("battery_capacity_kwh", val=battery_capacity_kwh_init, units="kW*h")
-
-        if self.hopp_config["technologies"]["wind"]["turbine_rating_kw"]:
-            wind_turbine_rating_kw_init = self.hopp_config["technologies"]["wind"][
-                "turbine_rating_kw"
-            ]
-        else:
-            wind_turbine_rating_kw_init = 0.0
-        self.add_input("wind_turbine_rating_kw", val=wind_turbine_rating_kw_init, units="kW")
 
         # Outputs
         self.add_output("lcoe", val=0.0, units="USD/(kW*h)")
@@ -98,9 +99,12 @@ class HOPPComponent(om.ExplicitComponent):
                 electrolyzer_rating = self.options["tech_config"]["electrolyzer_rating"]
 
             self.hybrid_interface = setup_hopp(
-                self.options["tech_config"]["performance_model"]["config"],
-                self.options["plant_config"],
-                electrolyzer_rating,
+                hopp_config=self.options["tech_config"]["performance_model"]["config"],
+                wind_turbine_rating_kw=float(inputs["wind_turbine_rating_kw"]),
+                pv_rating_kw=float(inputs["pv_capacity_kw"]),
+                battery_rating_kw=float(inputs["battery_capacity_kw"]),
+                battery_rating_kwh=float(inputs["battery_capacity_kwh"]),
+                electrolyzer_rating=electrolyzer_rating,
             )
 
             # Run the HOPP model and get the results
