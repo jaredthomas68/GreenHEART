@@ -28,6 +28,11 @@ class HOPPComponent(om.ExplicitComponent):
     def setup(self):
         self.hopp_config = self.options["tech_config"]["performance_model"]["config"]
 
+        if "cache" in self.hopp_config["config"]["simulation_options"]:
+            self.cache = self.hopp_config["config"]["simulation_options"]["cache"]
+        else:
+            self.cache = True
+
         if self.hopp_config["technologies"]["wind"]["turbine_rating_kw"]:
             wind_turbine_rating_kw_init = self.hopp_config["technologies"]["wind"][
                 "turbine_rating_kw"
@@ -68,12 +73,6 @@ class HOPPComponent(om.ExplicitComponent):
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
 
     def compute(self, inputs, outputs):
-        # Create a unique hash for the current configuration to use as a cache key
-        config_hash = hashlib.md5(
-            str(self.options["tech_config"]["performance_model"]["config"]).encode("utf-8")
-            + str(self.options["plant_config"]["plant"]["plant_life"]).encode("utf-8")
-        ).hexdigest()
-
         # Define the keys of interest from the HOPP results that we want to cache
         keys_of_interest = [
             "combined_hybrid_power_production_hopp",
@@ -81,14 +80,21 @@ class HOPPComponent(om.ExplicitComponent):
             "opex",
         ]
 
-        # Create a cache directory if it doesn't exist
-        cache_dir = Path("cache")
-        if not cache_dir.exists():
-            cache_dir.mkdir(parents=True)
-        cache_file = f"cache/{config_hash}.pkl"
+        if self.cache:
+            # Create a unique hash for the current configuration to use as a cache key
+            config_hash = hashlib.md5(
+                str(self.options["tech_config"]["performance_model"]["config"]).encode("utf-8")
+                + str(self.options["plant_config"]["plant"]["plant_life"]).encode("utf-8")
+            ).hexdigest()
+
+            # Create a cache directory if it doesn't exist
+            cache_dir = Path("cache")
+            if not cache_dir.exists():
+                cache_dir.mkdir(parents=True)
+            cache_file = f"cache/{config_hash}.pkl"
 
         # Check if the results for the current configuration are already cached
-        if Path(cache_file).exists():
+        if self.cache and Path(cache_file).exists():
             # Load the cached results
             cache_path = Path(cache_file)
             with cache_path.open("rb") as f:
@@ -114,9 +120,10 @@ class HOPPComponent(om.ExplicitComponent):
             # Extract the subset of results we are interested in
             subset_of_hopp_results = {key: hopp_results[key] for key in keys_of_interest}
             # Cache the results for future use
-            cache_path = Path(cache_file)
-            with cache_path.open("wb") as f:
-                dill.dump(subset_of_hopp_results, f)
+            if self.cache:
+                cache_path = Path(cache_file)
+                with cache_path.open("wb") as f:
+                    dill.dump(subset_of_hopp_results, f)
 
         # Set the outputs from the cached or newly computed results
         outputs["electricity"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]

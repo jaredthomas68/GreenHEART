@@ -120,25 +120,25 @@ def setup_hopp(
     electrolyzer_rating=None,
 ):
     # overwrite individual fin_model values with cost_info values
-    hopp_config = overwrite_fin_values(hopp_config)
+    hopp_config_internal = overwrite_fin_values(hopp_config)
 
     # TODO: improve this if logic to correctly account for if the user
     # defines a desired schedule or uses the electrolyzer rating as the desired schedule
-    if "battery" in hopp_config["technologies"].keys() and (
-        "desired_schedule" not in hopp_config["site"].keys()
-        or hopp_config["site"]["desired_schedule"] == []
+    if "battery" in hopp_config_internal["technologies"].keys() and (
+        "desired_schedule" not in hopp_config_internal["site"].keys()
+        or hopp_config_internal["site"]["desired_schedule"] == []
     ):
-        hopp_config["site"]["desired_schedule"] = [10.0] * 8760
+        hopp_config_internal["site"]["desired_schedule"] = [10.0] * 8760
 
     if electrolyzer_rating is not None:
-        hopp_config["site"]["desired_schedule"] = [electrolyzer_rating] * 8760
+        hopp_config_internal["site"]["desired_schedule"] = [electrolyzer_rating] * 8760
 
-    hopp_site = SiteInfo(**hopp_config["site"])
+    hopp_site = SiteInfo(**hopp_config_internal["site"])
 
     # setup hopp interface
     if np.any([pv_rating_kw, wind_turbine_rating_kw, battery_rating_kw, battery_rating_kwh]):
         hopp_config_internal = recreate_hopp_config_for_optimization(
-            hopp_config=hopp_config,
+            hopp_config=hopp_config_internal,
             wind_turbine_rating_kw=wind_turbine_rating_kw,
             pv_rating_kw=pv_rating_kw,
             battery_rating_kw=battery_rating_kw,
@@ -329,10 +329,13 @@ def overwrite_fin_values(hopp_config):
                 hopp_config["technologies"]["battery"]["fin_model"]["system_costs"]["om_capacity"][
                     i
                 ] = hopp_config["config"]["cost_info"]["battery_om_per_kw"]
+                hopp_config["technologies"]["battery"]["fin_model"]["system_costs"][
+                    "om_batt_capacity_cost"
+                ] = hopp_config["config"]["cost_info"]["battery_om_per_kw"]
 
             om_batt_fixed_cost = hopp_config["technologies"]["battery"]["fin_model"][
                 "system_costs"
-            ]["om_capacity"][i]
+            ]["om_capacity"][-1]
             battery_om_per_kw = hopp_config["config"]["cost_info"]["battery_om_per_kw"]
             msg = (
                 f"'om_capacity' in the battery 'fin_model' was {om_batt_fixed_cost}, but"
@@ -367,5 +370,4 @@ def overwrite_fin_values(hopp_config):
                 " value from the 'cost_info'",
             )
             warnings.warn(msg, UserWarning)
-
     return hopp_config
