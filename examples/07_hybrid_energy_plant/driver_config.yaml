@@ -1,0 +1,32 @@
+name: "driver_config"
+description: "Runs a wind, pv, and battery plant with optimization"
+
+general:
+  folder_output: wind_pv_battery_run
+
+driver:
+  optimization:
+    flag: False
+    tol: 0.1
+    max_iter: 3
+    solver: COBYLA
+    rhobeg: 1000.
+    debug_print: False
+
+design_variables:
+  hopp:
+    wind_turbine_rating_kw:
+      flag: True
+      lower: 0.0
+      upper: 5.
+      units: MW
+
+constraints:
+  hopp:
+    percent_load_missed:
+      flag: True
+      lower: 20.
+      units: percent
+
+objective:
+  name: plant.financials_group_profast.profast_comp_0.LCOE
