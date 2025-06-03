@@ -6,12 +6,63 @@ from hopp.simulation.technologies.sites import SiteInfo
 
 
 def recreate_hopp_config_for_optimization(
-    hopp_config,
+    hopp_config: dict,
     pv_rating_kw=None,
     wind_turbine_rating_kw=None,
     battery_rating_kw=None,
     battery_rating_kwh=None,
-):
+) -> dict:
+    """
+    Adjusts the HOPP configuration dictionary for optimization based on system ratings.
+
+    This function modifies the HOPP configuration (`hopp_config`) to reflect the desired
+    ratings for photovoltaic (PV), wind turbine, and battery systems. It ensures that the
+    configuration adheres to specific tolerances and removes technologies if their ratings
+    fall below certain thresholds. It also sets a range where a lower rating than given will
+    be used so optimization algorithms can adjust ratings, pushing them into feasible ranges
+    or below removal thresholds.
+
+    Args:
+        hopp_config (dict): The original HOPP configuration dictionary containing site,
+            technology, and cost information.
+        pv_rating_kw (float, optional): Desired system capacity for photovoltaic (PV) in
+            kilowatts. If None, PV configuration remains unchanged in the config dictionary.
+        wind_turbine_rating_kw (float, optional): Desired turbine rating for wind in kilowatts.
+            If None, wind configuration remains unchanged in the config dictionary.
+        battery_rating_kw (float, optional): Desired system capacity for battery in kilowatts.
+            If None, battery configuration remains unchanged in the config dictionary.
+        battery_rating_kwh (float, optional): Desired energy capacity for battery in kilowatt-
+            hours. If None, battery configuration remains unchanged in the config dictionary.
+
+    Returns:
+        dict: A modified copy of the HOPP configuration dictionary with updated system ratings
+        and technology configurations based on the function input values.
+
+    Notes:
+        - Technologies are removed from the configuration if their ratings fall below the
+          `smooth_tol` threshold.
+        - Ratings are interpolated between `smooth_tol` and `rating_tol` for values within this
+          range.
+        - Cost information related to removed technologies is also removed from the configuration.
+        - Battery operation and maintenance (O&M) costs are recalculated based on the provided
+          ratings.
+
+    Example:
+        ```python
+        updated_config = recreate_hopp_config_for_optimization(
+            hopp_config=original_config,
+            pv_rating_kw=500,
+            wind_turbine_rating_kw=1000,
+            battery_rating_kw=200,
+            battery_rating_kwh=400,
+        )
+        ```
+
+    Raises:
+        KeyError: If required keys are missing in the `hopp_config` dictionary.
+        TypeError: If the input ratings are not numeric values.
+    """
+
     hopp_config_internal = copy.deepcopy(hopp_config)
     rating_tol = 50.0
     min_tol = 50.0
