@@ -75,6 +75,8 @@ class HOPPComponent(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         # Define the keys of interest from the HOPP results that we want to cache
         keys_of_interest = [
+            "percent_load_missed",
+            "curtailment_percent",
             "combined_hybrid_power_production_hopp",
             "capex",
             "opex",
@@ -126,8 +128,8 @@ class HOPPComponent(om.ExplicitComponent):
                     dill.dump(subset_of_hopp_results, f)
 
         # Set the outputs from the cached or newly computed results
-        outputs["percent_load_missed"] = subset_of_hopp_results["energy_shortfall_hopp"]
-        outputs["curtailment_percent"] = subset_of_hopp_results["combined_hybrid_curtailment_hopp"]
+        outputs["percent_load_missed"] = subset_of_hopp_results["percent_load_missed"]
+        outputs["curtailment_percent"] = subset_of_hopp_results["curtailment_percent"]
         outputs["electricity_out"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]

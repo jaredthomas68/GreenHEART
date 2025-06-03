@@ -10,6 +10,9 @@
 - Updated the naming scheme throughout the framework so resources produced always have `_out` and resources consumed always have `_in` in their names.
 - Removed the `to_organize` directory.
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
+- Moved `overwrite_fin_values` to HOPP
+- Added example for running with HOPP as the only technology in the H2Integrate system
+- Made caching in the HOPP wrapper optional
 
 ## 0.3.0 [May 2 2025]
 

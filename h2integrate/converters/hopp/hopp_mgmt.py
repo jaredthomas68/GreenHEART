@@ -198,6 +198,8 @@ def run_hopp(hi, project_lifetime, verbose=True):
         "hybrid_plant": hi.system,
         "combined_hybrid_power_production_hopp": grid_outputs.system_pre_interconnect_kwac[0:8760],
         "combined_hybrid_curtailment_hopp": hi.system.grid.generation_curtailed,
+        "curtailment_percent": hi.system.grid.curtailment_percent,
+        "percent_load_missed": hi.system.grid.missed_load_percentage,
         "energy_shortfall_hopp": hi.system.grid.missed_load,
         "annual_energies": hi.system.annual_energies,
         "hybrid_npv": hi.system.net_present_values.hybrid,

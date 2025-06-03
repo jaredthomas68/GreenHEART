@@ -160,3 +160,8 @@ technologies:
             "leverage after tax nominal discount rate": 0.10893
             "debt equity ratio of initial financing": 0.624788
             "debt interest rate": 0.050049
+
+
+config:
+  simulation_options:
+    cache: false
