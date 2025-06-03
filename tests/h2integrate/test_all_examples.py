@@ -191,3 +191,28 @@ def test_paper_example(subtests):
             )
             == 51.91476681
         )
+
+
+def test_hybrid_energy_plant_example(subtests):
+    # Change the current working directory to the example's directory
+    os.chdir(examples_dir / "07_hybrid_energy_plant")
+
+    # Create a H2Integrate model
+    model = H2IntegrateModel(Path.cwd() / "wind_pv_battery.yaml")
+
+    # Run the model
+    model.run()
+
+    model.post_process()
+
+    # Subtests for checking specific values
+    with subtests.test("Check LCOE"):
+        assert (
+            pytest.approx(
+                model.prob.get_val(
+                    "plant.financials_group_profast.profast_comp_0.LCOE", units="USD/MW/h"
+                )[0],
+                rel=1e-5,
+            )
+            == 83.2123
+        )
