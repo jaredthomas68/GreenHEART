@@ -64,11 +64,11 @@ class HOPPComponent(om.ExplicitComponent):
         self.add_input("battery_capacity_kwh", val=battery_capacity_kwh_init, units="kW*h")
 
         # Outputs
-        self.add_output("lcoe", val=0.0, units="USD/(kW*h)")
         self.add_output("percent_load_missed", units="percent", val=0.0)
         self.add_output("curtailment_percent", units="percent", val=0.0)
-        self.add_output("aep", units="(kW*h)", val=0.0)
-        self.add_output("electricity", val=np.zeros(n_timesteps), units="kW", desc="Power output")
+        self.add_output(
+            "electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
+        )
         self.add_output("CapEx", val=0.0, units="USD", desc="Total capital expenditures")
         self.add_output("OpEx", val=0.0, units="USD/year", desc="Total fixed operating costs")
 
@@ -126,6 +126,8 @@ class HOPPComponent(om.ExplicitComponent):
                     dill.dump(subset_of_hopp_results, f)
 
         # Set the outputs from the cached or newly computed results
-        outputs["electricity"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
+        outputs["percent_load_missed"] = subset_of_hopp_results["energy_shortfall_hopp"]
+        outputs["curtailment_percent"] = subset_of_hopp_results["combined_hybrid_curtailment_hopp"]
+        outputs["electricity_out"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]
