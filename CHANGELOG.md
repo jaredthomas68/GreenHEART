@@ -12,6 +12,7 @@
 - Removed the `to_organize` directory.
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
 - Bump min Python version and removed unnecessary packages from `pyproject.toml.
+- Expanded docs to include a new section on modifying config dicts after model instantiation.
 
 ## 0.3.0 [May 2 2025]
 
