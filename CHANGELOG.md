@@ -12,8 +12,10 @@
 - Split out the electrolyzer cost models `basic` and `singlitico` for clarity.
 - Bump min Python version and removed unnecessary packages from `pyproject.toml.
 - Moved `overwrite_fin_values` to HOPP
+- Enable optimization with HOPP technology ratings using `recreate_hopp_config_for_optimization`
 - Added example for running with HOPP as the only technology in the H2Integrate system
 - Made caching in the HOPP wrapper optional
+
 
 ## 0.3.0 [May 2 2025]
 

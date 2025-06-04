@@ -97,7 +97,3 @@ technologies:
         #     "2057": 103.7308658
         #     "2058": 103.7308658
         #     "2059": 103.7308658
-
-config:
-  simulation_options:
-    cache: false
