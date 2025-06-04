@@ -75,7 +75,7 @@ dependencies = [
     "openpyxl",
     "attrs",
     "utm",
-    "hopp @ git+https://github.com/jaredthomas68/HOPP.git",
+    "hopp @ git+ssh://git@github.com:jaredthomas68/HOPP.git",
     "orbit-nrel==1.1",
     "openmdao",
     "ProFAST",
