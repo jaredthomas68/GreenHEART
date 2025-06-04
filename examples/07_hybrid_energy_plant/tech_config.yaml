@@ -2,11 +2,11 @@ name: "technology_config"
 description: "This plant has wind feeding into an electrolyzer with optimization"
 
 technologies:
-  hopp:
+  hybrid:
     performance_model:
-      model: "hopp"
+      model: "hybrid"
       config: !include tech_inputs/hopp_config.yaml
     cost_model:
-      model: "hopp"
+      model: "hybrid"
     financial_model:
       group: "profast"

@@ -11,6 +11,74 @@ from h2integrate.converters.hopp.hopp_mgmt import run_hopp, setup_hopp
 n_timesteps = 8760
 
 
+class HOPPSubGroup(om.Group):
+    def initialize(self):
+        self.options.declare("tech_config", types=dict)
+        self.options.declare("plant_config", types=dict)
+
+    def setup(self):
+        tech_config = self.options["tech_config"]
+        plant_config = self.options["plant_config"]
+        hopp_config = self.options["tech_config"]["performance_model"]["config"]
+        design_variables = hopp_config["config"]["simulation_options"]["design_variables"]
+
+        self.add_subsystem(
+            "hopp_component",
+            HOPPComponent(tech_config=tech_config, plant_config=plant_config),
+            promotes=["*"],
+        )
+
+        c2i_str = "power_capacity_to_interconnect_ratio = (0"
+        for v in design_variables:
+            if "h" not in v:
+                if "wind_turbine" in v:
+                    c2i_str += f" + {v}*{hopp_config['technologies']['wind']['num_turbines']}"
+                else:
+                    c2i_str += f" + {v}"
+        c2i_str += f")/{hopp_config['technologies']['grid']['interconnect_kw']}"
+
+        self.add_subsystem(
+            "hopp_c2i_component",
+            om.ExecComp(c2i_str, power_capacity_to_interconnect_ratio={"units": "unitless"}),
+            promotes=["*"],
+        )
+
+        if np.any(["battery" in v for v in design_variables]):
+            batt_str = "battery_duration = battery_capacity_kwh/battery_capacity_kw"
+            batt_kw = hopp_config["technologies"]["battery"]["system_capacity_kw"]
+            batt_kwh = hopp_config["technologies"]["battery"]["system_capacity_kwh"]
+            self.add_subsystem(
+                "hopp_batt_duration_component",
+                om.ExecComp(
+                    batt_str,
+                    battery_duration={"val": batt_kwh / batt_kw, "units": "h"},
+                    battery_capacity_kw={"val": batt_kw, "units": "kW"},
+                    battery_capacity_kwh={"val": batt_kwh, "units": "kW*h"},
+                ),
+                promotes=["*"],
+            )
+
+        uphours = np.count_nonzero(hopp_config["site"]["desired_schedule"])
+        interconnect_kw = hopp_config["technologies"]["grid"]["interconnect_kw"]
+        interconnect_kwh = interconnect_kw * uphours
+        e2i_str = f"annual_energy_to_interconnect_potential_ratio = aep/{interconnect_kwh}"
+        self.add_subsystem(
+            "hopp_e2i_component",
+            om.ExecComp(
+                e2i_str,
+                annual_energy_to_interconnect_potential_ratio={"units": "unitless"},
+                aep={"units": "kW*h"},
+            ),
+            promotes=["*"],
+        )
+
+    def configure(self):
+        self.promotes("hopp_component", any=["*"])
+        self.promotes("hopp_c2i_component", any=["power_capacity_to_interconnect_ratio"])
+        self.promotes("hopp_batt_duration_component", any=["battery_duration"])
+        self.promotes("hopp_e2i_component", any=["annual_energy_to_interconnect_potential_ratio"])
+
+
 class HOPPComponent(om.ExplicitComponent):
     """
     A simple OpenMDAO component that represents a HOPP model.
@@ -66,6 +134,7 @@ class HOPPComponent(om.ExplicitComponent):
         # Outputs
         self.add_output("percent_load_missed", units="percent", val=0.0)
         self.add_output("curtailment_percent", units="percent", val=0.0)
+        self.add_output("aep", units="kW*h", val=0.0)
         self.add_output(
             "electricity_out", val=np.zeros(n_timesteps), units="kW", desc="Power output"
         )
@@ -78,6 +147,7 @@ class HOPPComponent(om.ExplicitComponent):
             "percent_load_missed",
             "curtailment_percent",
             "combined_hybrid_power_production_hopp",
+            "annual_energies",
             "capex",
             "opex",
         ]
@@ -130,6 +200,7 @@ class HOPPComponent(om.ExplicitComponent):
         # Set the outputs from the cached or newly computed results
         outputs["percent_load_missed"] = subset_of_hopp_results["percent_load_missed"]
         outputs["curtailment_percent"] = subset_of_hopp_results["curtailment_percent"]
+        outputs["aep"] = subset_of_hopp_results["annual_energies"]["hybrid"]
         outputs["electricity_out"] = subset_of_hopp_results["combined_hybrid_power_production_hopp"]
         outputs["CapEx"] = subset_of_hopp_results["capex"]
         outputs["OpEx"] = subset_of_hopp_results["opex"]
