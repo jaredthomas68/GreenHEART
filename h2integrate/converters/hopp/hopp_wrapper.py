@@ -43,6 +43,14 @@ class HOPPSubGroup(om.Group):
             promotes=["*"],
         )
 
+        for v in design_variables:
+            if "h" not in v:
+                if "wind_turbine" in v:
+                    rating = hopp_config["technologies"]["wind"]["turbine_rating_kw"]
+                    self.set_input_defaults(v, units="kW", val=rating)
+                else:
+                    self.set_input_defaults(v, val=0.0, units="kW")
+
         if np.any(["battery" in v for v in design_variables]):
             batt_str = "battery_duration = battery_capacity_kwh/battery_capacity_kw"
             batt_kw = hopp_config["technologies"]["battery"]["system_capacity_kw"]

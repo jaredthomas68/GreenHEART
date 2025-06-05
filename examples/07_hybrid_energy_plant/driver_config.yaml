@@ -14,7 +14,7 @@ driver:
     debug_print: False
 
 design_variables:
-  hopp:
+  hybrid:
     wind_turbine_rating_kw:
       flag: True
       lower: 0.0
@@ -48,8 +48,8 @@ constraints:
       units: percent
     battery_duration:
       flag: True
-      lower: 0.2
-      units: unitless
+      upper: 10
+      units: h
     power_capacity_to_interconnect_ratio:
       flag: True
       lower: 0.2
