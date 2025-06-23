@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.X, Unreleased, TBD
+
+- Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
+
 ## 0.3.1, Unreleased, TBD
 
 - Added methanol production base class

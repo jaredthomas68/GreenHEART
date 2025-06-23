@@ -38,6 +38,16 @@ from h2integrate.converters.water.hydro_plant_run_of_river import (
 from h2integrate.converters.hydrogen.eco_tools_pem_electrolyzer import (
     ECOElectrolyzerPerformanceModel,
 )
+from h2integrate.converters.hydrogen.geologic.natural_geoh2_plant import (
+    NaturalGeoH2CostModel,
+    NaturalGeoH2FinanceModel,
+    NaturalGeoH2PerformanceModel,
+)
+from h2integrate.converters.hydrogen.geologic.stimulated_geoh2_plant import (
+    StimulatedGeoH2CostModel,
+    StimulatedGeoH2FinanceModel,
+    StimulatedGeoH2PerformanceModel,
+)
 
 
 supported_models = {
@@ -66,6 +76,12 @@ supported_models = {
     "smr_methanol_plant_performance": SMRMethanolPlantPerformanceModel,
     "smr_methanol_plant_cost": SMRMethanolPlantCostModel,
     "methanol_plant_financial": SMRMethanolPlantFinanceModel,
+    "natural_geoh2_performance": NaturalGeoH2PerformanceModel,
+    "natural_geoh2_cost": NaturalGeoH2CostModel,
+    "natural_geoh2": NaturalGeoH2FinanceModel,
+    "stimulated_geoh2_performance": StimulatedGeoH2PerformanceModel,
+    "stimulated_geoh2_cost": StimulatedGeoH2CostModel,
+    "stimulated_geoh2": StimulatedGeoH2FinanceModel,
     # Transport
     "cable": CablePerformanceModel,
     "pipe": PipePerformanceModel,
