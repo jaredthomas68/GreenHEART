@@ -7,11 +7,11 @@ from h2integrate.transporters.power_combiner import CombinerPerformanceModel
 from h2integrate.converters.hopp.hopp_wrapper import HOPPComponent
 from h2integrate.converters.solar.solar_pysam import PYSAMSolarPlantPerformanceModel
 from h2integrate.storage.hydrogen.eco_storage import H2Storage
-from h2integrate.controllers.openloop_controller import PassThroughOpenLoopController
 from h2integrate.storage.hydrogen.tank_baseclass import (
     HydrogenTankCostModel,
     HydrogenTankPerformanceModel,
 )
+from h2integrate.controllers.openloop_controllers import PassThroughOpenLoopController
 from h2integrate.converters.wind.wind_plant_pysam import PYSAMWindPlantPerformanceModel
 from h2integrate.converters.desalination.desalination import (
     ReverseOsmosisCostModel,
