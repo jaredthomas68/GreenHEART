@@ -180,6 +180,7 @@ class H2IntegrateModel:
 
         self.tech_names = []
         self.performance_models = []
+        self.control_models = []
         self.cost_models = []
         self.financial_models = []
 
@@ -193,6 +194,22 @@ class H2IntegrateModel:
             else:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
+
+                # Add the control model to the group
+                if "storage" in tech_name:
+                    if "control_model" in individual_tech_config:
+                        control_model_name = individual_tech_config["control_model"]["model"]
+                    else:
+                        control_model_name = "pass_through_controller"
+                    control_object = self.supported_models[control_model_name]
+                    tech_group.add_subsystem(
+                        "control_model",
+                        control_object(
+                            plant_config=self.plant_config, tech_config=individual_tech_config
+                        ),
+                        promotes=["*"],
+                    )
+                    self.control_models.append(control_object)
 
                 # Special handling for short-term components that share performance and cost models
                 if tech_name in combined_performance_and_cost_model_technologies:
