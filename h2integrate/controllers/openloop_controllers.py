@@ -48,7 +48,6 @@ class OpenLoopControllerBaseClass(om.ExplicitComponent):
         self.add_input(
             f"{resource_name}_in",
             shape_by_conn=True,
-            copy_shape=f"{resource_name}_out",
             units=resource_units,
             desc=f"{resource_name} input timeseries from production to storage",
         )
