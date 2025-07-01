@@ -117,7 +117,7 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
         # Get the size of the input/output array
         size = self._get_var_meta(f"{resource_name}_in", "size")
 
-        # Declare partials for all elements based on the eigenvector
+        # Declare partials sparsely for all elements based on the eigenvector
         self.declare_partials(
             of=f"{resource_name}_out",
             wrt=f"{resource_name}_in",
