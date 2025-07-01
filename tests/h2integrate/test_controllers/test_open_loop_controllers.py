@@ -14,12 +14,7 @@ def test_pass_through_controller(subtests):
     current_dir = Path(__file__).parent
 
     # Resolve the paths to the configuration files
-    plant_config_path = current_dir / "inputs" / "plant_config.yaml"
     tech_config_path = current_dir / "inputs" / "tech_config.yaml"
-
-    # Load the plant configuration
-    with plant_config_path.open() as file:
-        plant_config = yaml.safe_load(file)
 
     # Load the technology configuration
     with tech_config_path.open() as file:
@@ -37,7 +32,7 @@ def test_pass_through_controller(subtests):
     prob.model.add_subsystem(
         "pass_through_controller",
         PassThroughOpenLoopController(
-            plant_config=plant_config, tech_config=tech_config["technologies"]["h2_storage"]
+            plant_config={}, tech_config=tech_config["technologies"]["h2_storage"]
         ),
         promotes=["*"],
     )
