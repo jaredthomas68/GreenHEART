@@ -42,6 +42,8 @@ technologies:
       model: "h2_storage"
     model_inputs:
       shared_parameters:
+        resource_name: "hydrogen"
+        resource_units: "kg/h"
         rating: 640
         size_capacity_from_demand:
           flag: True # If True, then storage is sized to provide steady-state storage

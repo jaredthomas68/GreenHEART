@@ -1,8 +1,8 @@
 # CHANGELOG
 
 ## 0.3.X, Unreleased, TBD
-
 - Added geologic hydrogen (geoh2) converter and examples [PR 135](https://github.com/NREL/H2Integrate/pull/135)
+- Added framework for open-loop storage controllers and a simple pass-through controller that sets output equal to input
 
 ## 0.3.1, Unreleased, TBD
 
