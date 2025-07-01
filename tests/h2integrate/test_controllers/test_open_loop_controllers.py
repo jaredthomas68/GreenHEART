@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import yaml
+import numpy as np
 import pytest
 import openmdao.api as om
 from openmdao.utils.assert_utils import assert_check_totals
@@ -29,7 +30,7 @@ def test_pass_through_controller(subtests):
 
     prob.model.add_subsystem(
         name="IVC",
-        subsys=om.IndepVarComp(name="hydrogen_in", val=range(10)),
+        subsys=om.IndepVarComp(name="hydrogen_in", val=np.arange(10)),
         promotes=["*"],
     )
 
@@ -47,7 +48,7 @@ def test_pass_through_controller(subtests):
 
     # Run the test
     with subtests.test("Check output"):
-        assert pytest.approx(prob.get_val("hydrogen_out"), rel=1e-3) == range(10)
+        assert pytest.approx(prob.get_val("hydrogen_out"), rel=1e-3) == np.arange(10)
 
     # Run the test
     with subtests.test("Check derivatives"):
