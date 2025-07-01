@@ -1,4 +1,5 @@
 import openmdao.api as om
+from numpy import ones
 
 
 class OpenLoopControllerBaseClass(om.ExplicitComponent):
@@ -113,9 +114,14 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
             "resource_name"
         ]
 
-        # Declare unity partials for pass-through output with respect to input
+        # Get the size of the input/output array
+        size = self._get_var_meta(f"{resource_name}_in", "size")
+
+        # Declare partials for all elements based on the eigenvector
         self.declare_partials(
             of=f"{resource_name}_out",
             wrt=f"{resource_name}_in",
-            val=1.0,
+            rows=range(size),
+            cols=range(size),
+            val=ones(size),
         )
