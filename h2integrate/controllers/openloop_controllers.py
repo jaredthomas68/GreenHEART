@@ -108,6 +108,11 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
 
         This method specifies that the derivative of the output with respect to the input is
         always 1.0, consistent with the pass-through behavior.
+
+        Note:
+        This method is not currently used and isn't strictly needed if you're creating other
+        controllers; it is included as a nod towards potential future development enabling
+        more derivative information passing.
         """
 
         resource_name = self.options["tech_config"]["model_inputs"]["shared_parameters"][
