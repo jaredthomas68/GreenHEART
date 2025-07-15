@@ -83,7 +83,7 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
     This controller directly passes the input resource flow to the output without any
     modifications. It is useful for testing, as a placeholder for more complex controllers,
     and for maintaining consistency between controlled and uncontrolled frameworks as this
-    'controller' does not alter the system output in anyway.
+    'controller' does not alter the system output in any way.
     """
 
     def compute(self, inputs, outputs):
