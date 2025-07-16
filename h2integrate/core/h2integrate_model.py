@@ -25,6 +25,9 @@ class H2IntegrateModel:
         # read in config file; it's a yaml dict that looks like this:
         self.load_config(config_file)
 
+        # load in supported models
+        self.supported_models = supported_models.copy()
+
         # load custom models
         self.collect_custom_models()
 
@@ -77,8 +80,6 @@ class H2IntegrateModel:
         This method loads custom models from the specified directory and adds them to the
         supported models dictionary.
         """
-
-        self.supported_models = supported_models.copy()
 
         for tech_name, tech_config in self.technology_config["technologies"].items():
             for model_type in ["performance_model", "cost_model", "financial_model"]:
@@ -195,22 +196,6 @@ class H2IntegrateModel:
                 tech_group = self.plant.add_subsystem(tech_name, om.Group())
                 self.tech_names.append(tech_name)
 
-                # Add the control model to the group
-                if "storage" in tech_name:
-                    if "control_model" in individual_tech_config:
-                        control_model_name = individual_tech_config["control_model"]["model"]
-                    else:
-                        control_model_name = "pass_through_controller"
-                    control_object = self.supported_models[control_model_name]
-                    tech_group.add_subsystem(
-                        "control_model",
-                        control_object(
-                            plant_config=self.plant_config, tech_config=individual_tech_config
-                        ),
-                        promotes=["*"],
-                    )
-                    self.control_models.append(control_object)
-
                 # Check if performance, cost, and financial models are the same
                 # and in combined_performance_and_cost_models
                 perf_model = individual_tech_config.get("performance_model", {}).get("model")
@@ -228,32 +213,26 @@ class H2IntegrateModel:
                     self.performance_models.append(comp)
                     self.cost_models.append(comp)
                     self.financial_models.append(comp)
+
+                    # Catch control models for systems that have the same performance & cost models
+                    if "control_model" in individual_tech_config:
+                        control_object = self._process_model(
+                            "control_model", individual_tech_config, tech_group
+                        )
+                        self.control_models.append(control_object)
                     continue
 
-                # Process the technology models
-                performance_name = individual_tech_config["performance_model"]["model"]
-                performance_object = self.supported_models[performance_name]
-                tech_group.add_subsystem(
-                    performance_name,
-                    performance_object(
-                        plant_config=self.plant_config, tech_config=individual_tech_config
-                    ),
-                    promotes=["*"],
-                )
-                self.performance_models.append(performance_object)
-
-                # Process the cost models
-                if "cost_model" in individual_tech_config:
-                    cost_name = individual_tech_config["cost_model"]["model"]
-                    cost_object = self.supported_models[cost_name]
-                    tech_group.add_subsystem(
-                        cost_name,
-                        cost_object(
-                            plant_config=self.plant_config, tech_config=individual_tech_config
-                        ),
-                        promotes=["*"],
-                    )
-                    self.cost_models.append(cost_object)
+                # Process the models
+                # TODO: integrate financial_model into the loop below
+                model_types = ["performance_model", "control_model", "cost_model"]
+                for model_type in model_types:
+                    if model_type in individual_tech_config:
+                        model_object = self._process_model(
+                            model_type, individual_tech_config, tech_group
+                        )
+                        getattr(self, model_type + "s").append(model_object)
+                    elif model_type == "performance_model":
+                        raise Exception("Model definition requires 'performance_model'.")
 
                 # Process the financial models
                 if "financial_model" in individual_tech_config:
@@ -269,6 +248,19 @@ class H2IntegrateModel:
                             promotes=["*"],
                         )
                         self.financial_models.append(financial_object)
+
+    def _process_model(self, model_type, individual_tech_config, tech_group):
+        # Generalized function to process model definitions
+        model_name = individual_tech_config[model_type]["model"]
+        model_object = self.supported_models[model_name]
+        tech_group.add_subsystem(
+            model_name,
+            model_object(
+                plant_config=self.plant_config, tech_config=individual_tech_config
+            ),
+            promotes=["*"],
+        )
+        return model_object
 
     def create_financial_model(self):
         """
