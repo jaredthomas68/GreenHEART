@@ -207,7 +207,9 @@ class H2IntegrateModel:
                     and perf_model in combined_performance_and_cost_models
                 ):
                     comp = self.supported_models[perf_model](
-                        plant_config=self.plant_config, tech_config=individual_tech_config
+                        driver_config=self.driver_config,
+                        plant_config=self.plant_config,
+                        tech_config=individual_tech_config,
                     )
                     tech_group.add_subsystem(tech_name, comp, promotes=["*"])
                     self.performance_models.append(comp)
@@ -243,7 +245,9 @@ class H2IntegrateModel:
                         tech_group.add_subsystem(
                             f"{tech_name}_financial",
                             financial_object(
-                                plant_config=self.plant_config, tech_config=individual_tech_config
+                                driver_config=self.driver_config,
+                                plant_config=self.plant_config,
+                                tech_config=individual_tech_config,
                             ),
                             promotes=["*"],
                         )
@@ -299,6 +303,8 @@ class H2IntegrateModel:
                 commodity_types.append("ammonia")
             if "geoh2" in tech_configs:
                 commodity_types.append("hydrogen")
+            if "doc" in tech_configs:
+                commodity_types.append("co2")
             for tech in electricity_producing_techs:
                 if tech in tech_configs:
                     commodity_types.append("electricity")
@@ -478,6 +484,12 @@ class H2IntegrateModel:
                         self.plant.connect(
                             f"{tech_name}.total_ammonia_produced",
                             f"financials_group_{group_id}.total_ammonia_produced",
+                        )
+
+                    if "doc" in tech_name:
+                        self.plant.connect(
+                            f"{tech_name}.co2_capture_mtpy",
+                            f"financials_group_{group_id}.co2_capture_kgpy",
                         )
 
         self.plant.options["auto_order"] = True
