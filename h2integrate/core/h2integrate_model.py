@@ -262,7 +262,7 @@ class H2IntegrateModel:
             model_object(
                 driver_config=self.driver_config,
                 plant_config=self.plant_config,
-                tech_config=individual_tech_config
+                tech_config=individual_tech_config,
             ),
             promotes=["*"],
         )
