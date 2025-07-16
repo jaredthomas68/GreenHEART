@@ -38,7 +38,6 @@ class ControllerBaseClass(om.ExplicitComponent):
         """
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-
     def compute(self, inputs, outputs):
         """
         Perform computations for the component.
