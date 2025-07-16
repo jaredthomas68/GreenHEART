@@ -259,7 +259,11 @@ class H2IntegrateModel:
         model_object = self.supported_models[model_name]
         tech_group.add_subsystem(
             model_name,
-            model_object(plant_config=self.plant_config, tech_config=individual_tech_config),
+            model_object(
+                driver_config=self.driver_config,
+                plant_config=self.plant_config,
+                tech_config=individual_tech_config
+            ),
             promotes=["*"],
         )
         return model_object
