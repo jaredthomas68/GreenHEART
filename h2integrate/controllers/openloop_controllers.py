@@ -1,8 +1,11 @@
 import openmdao.api as om
+from attrs import field, define
 from numpy import ones
 
+from h2integrate.core.utilities import BaseConfig, merge_shared_inputs
 
-class OpenLoopControllerBaseClass(om.ExplicitComponent):
+
+class ControllerBaseClass(om.ExplicitComponent):
     """
     Base class for open-loop controllers in the H2Integrate system.
 
@@ -28,37 +31,12 @@ class OpenLoopControllerBaseClass(om.ExplicitComponent):
         """
         Define inputs and outputs for the component.
 
-        Inputs:
-            {resource_name}_in (array(float)): Input timeseries representing the resource flow into
-            the storage or system. The name is dynamically determined by the `resource_name` in
-            the `tech_config`.
+        This method must be implemented in subclasses to define the specific control I/O.
 
-        Outputs:
-            {resource_name}_out (array(float)): Output timeseries representing the resource flow out
-            of the storage or system. The name is dynamically determined by the `resource_name` in
-            the `tech_config`.
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
         """
-
-        resource_name = self.options["tech_config"]["model_inputs"]["shared_parameters"][
-            "resource_name"
-        ]
-        resource_units = self.options["tech_config"]["model_inputs"]["shared_parameters"][
-            "resource_units"
-        ]
-
-        self.add_input(
-            f"{resource_name}_in",
-            shape_by_conn=True,
-            units=resource_units,
-            desc=f"{resource_name} input timeseries from production to storage",
-        )
-
-        self.add_output(
-            f"{resource_name}_out",
-            copy_shape=f"{resource_name}_in",
-            units=resource_units,
-            desc=f"{resource_name} output timeseries from plant after storage",
-        )
+        raise NotImplementedError("This method should be implemented in a subclass.")
 
     def compute(self, inputs, outputs):
         """
@@ -76,7 +54,13 @@ class OpenLoopControllerBaseClass(om.ExplicitComponent):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
 
-class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
+@define
+class PassThroughOpenLoopControllerConfig(BaseConfig):
+    resource_name: str = field()
+    resource_units: str = field()
+
+
+class PassThroughOpenLoopController(ControllerBaseClass):
     """
     A simple pass-through controller for open-loop systems.
 
@@ -85,6 +69,25 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
     and for maintaining consistency between controlled and uncontrolled frameworks as this
     'controller' does not alter the system output in any way.
     """
+
+    def setup(self):
+        self.config = PassThroughOpenLoopControllerConfig.from_dict(
+            merge_shared_inputs(self.options["tech_config"]["model_inputs"], "control")
+        )
+
+        self.add_input(
+            f"{self.config.resource_name}_in",
+            shape_by_conn=True,
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} input timeseries from production to storage",
+        )
+
+        self.add_output(
+            f"{self.config.resource_name}_out",
+            copy_shape=f"{self.config.resource_name}_in",
+            units=self.config.resource_units,
+            desc=f"{self.config.resource_name} output timeseries from plant after storage",
+        )
 
     def compute(self, inputs, outputs):
         """
@@ -96,11 +99,9 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
             outputs (dict): Dictionary of output values.
                 - {resource_name}_out: Output resource flow, equal to the input flow.
         """
-        resource_name = self.options["tech_config"]["model_inputs"]["shared_parameters"][
-            "resource_name"
-        ]
 
-        outputs[f"{resource_name}_out"] = inputs[f"{resource_name}_in"]
+        # Assign the input to the output
+        outputs[f"{self.config.resource_name}_out"] = inputs[f"{self.config.resource_name}_in"]
 
     def setup_partials(self):
         """
@@ -115,17 +116,13 @@ class PassThroughOpenLoopController(OpenLoopControllerBaseClass):
         more derivative information passing.
         """
 
-        resource_name = self.options["tech_config"]["model_inputs"]["shared_parameters"][
-            "resource_name"
-        ]
-
         # Get the size of the input/output array
-        size = self._get_var_meta(f"{resource_name}_in", "size")
+        size = self._get_var_meta(f"{self.config.resource_name}_in", "size")
 
         # Declare partials sparsely for all elements based on the eigenvector
         self.declare_partials(
-            of=f"{resource_name}_out",
-            wrt=f"{resource_name}_in",
+            of=f"{self.config.resource_name}_out",
+            wrt=f"{self.config.resource_name}_in",
             rows=range(size),
             cols=range(size),
             val=ones(size),

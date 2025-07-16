@@ -4,7 +4,7 @@ description: "This hybrid plant produces hydrogen"
 technologies:
   h2_storage:
     control_model:
-      model: pass_through_controller
+      model: "pass_through_controller"
     performance_model:
       model: "h2_storage"
     cost_model:
@@ -13,6 +13,8 @@ technologies:
       shared_parameters:
         resource_name: "hydrogen"
         resource_units: "kg/h"
+
+      performance_parameters:
         rating: 720.
         size_capacity_from_demand:
           flag: False # If True, then storage is sized to provide steady-state storage
